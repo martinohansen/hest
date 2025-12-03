@@ -1,0 +1,117 @@
+{{define "content"}}
+<div id="step-container">{{template "new" .}}</div>
+{{end}} {{define "new"}}
+<div class="stack">
+  {{if .Error}}
+  <p class="error">{{.Error}}</p>
+  {{end}}
+  <form
+    id="game-players-form"
+    hx-post="/new/score"
+    hx-target="#step-container"
+    hx-swap="innerHTML"
+    class="stack"
+  >
+    <div>
+      <p>Vælg deltagere:</p>
+      {{template "player_list" .}}
+    </div>
+  </form>
+  <form
+    hx-post="/players"
+    hx-target="#player-list"
+    hx-swap="outerHTML"
+    class="inline-form"
+  >
+    <input id="new-player" type="text" name="name" placeholder="Navn" />
+    <button type="submit" class="ghost">Tilføj</button>
+  </form>
+  <div class="actions">
+    <button type="submit" form="game-players-form">Næste</button>
+    <button type="button" class="ghost" id="select-all-players">
+      Vælg alle
+    </button>
+  </div>
+</div>
+{{end}} {{define "player_list"}}
+<div id="player-list" class="list">
+  {{if .Players}} {{range .Players}}
+  <label class="list-item">
+    <input type="checkbox" name="player_id" value="{{.ID}}" />
+    <span>{{.Emoji}}</span>
+    {{.Name}}
+  </label>
+  {{end}} {{else}}
+  <p><em>Ingen spillere endnu.</em></p>
+  {{end}}
+</div>
+{{end}} {{define "score"}}
+<div class="stack">
+  <form action="/games/save" method="post" class="stack">
+    {{if .Error}}
+    <p class="error">{{.Error}}</p>
+    {{end}}
+    <label class="stack">
+      <span>Dato</span>
+      <input type="date" name="played_at" value="{{.PlayedAt}}" />
+    </label>
+
+    <div class="stack">
+      <p>Deltagere</p>
+      <div class="list">
+        {{range .Players}}
+        <div class="list-item">
+          <input type="hidden" name="player_id" value="{{.ID}}" />
+          <span>{{.Emoji}}</span>
+          {{.Name}}
+        </div>
+        {{end}}
+      </div>
+    </div>
+
+    <div class="stack">
+      <label class="stack">
+        <span>Vinder</span>
+        <select name="winner_id">
+          {{range .Players}}
+          <option value="{{.ID}}" {{if eq $.WinnerID .ID}}selected{{end}}>
+            {{.Emoji}} {{.Name}}
+          </option>
+          {{end}}
+        </select>
+      </label>
+      <label class="stack">
+        <span>2. plads</span>
+        <select name="second_id">
+          {{range .Players}}
+          <option value="{{.ID}}" {{if eq $.SecondID .ID}}selected{{end}}>
+            {{.Emoji}} {{.Name}}
+          </option>
+          {{end}}
+        </select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="submit">Gem</button>
+      <button
+        type="button"
+        hx-get="/new?partial=1"
+        hx-target="#step-container"
+        hx-swap="innerHTML"
+        class="ghost"
+      >
+        Tilbage
+      </button>
+    </div>
+  </form>
+</div>
+{{end}} {{define "success"}}
+<div class="notice">
+  <p>Spil gemt.</p>
+  <p>
+    <a href="/new">Tilføj et nyt</a> |
+    <a href="/">Tilbage til rangliste</a>
+  </p>
+</div>
+{{end}}

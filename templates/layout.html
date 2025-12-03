@@ -1,0 +1,38 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stilling</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="/static/app.css" />
+    <link rel="icon" href="/static/favicon.svg" />
+  </head>
+  <body>
+    <div class="container">
+      <nav class="nav">
+        🐴
+        <a href="/" {{if eq .Path "/"}}class="active"{{end}}>Stilling</a>
+        <a href="/games" {{if eq .Path "/games"}}class="active"{{end}}>Kampe</a>
+        <a href="/new" class="push {{if eq .Path "/new"}}active{{end}}">Tilføj kamp</a>
+      </nav>
+      <main class="card">{{template "content" .}}</main>
+    </div>
+    <script>
+      document.addEventListener("click", function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (target.id !== "select-all-players") return;
+        const list = document.getElementById("player-list");
+        if (!list) return;
+        list
+          .querySelectorAll('input[type="checkbox"][name="player_id"]')
+          .forEach(function (cb) {
+            cb.checked = true;
+          });
+      });
+    </script>
+  </body>
+</html>
+{{end}}

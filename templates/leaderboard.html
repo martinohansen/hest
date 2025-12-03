@@ -1,0 +1,32 @@
+{{define "content"}}
+<table class="table">
+  <thead>
+    <tr>
+      <th class="rank">#</th>
+      <th class="name"></th>
+      <th class="num">K</th>
+      <th class="num">V</th>
+      <th class="num">2</th>
+      <th class="num">P</th>
+      <th class="num">PPS</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{if .Players}} {{range $i, $p := .Players}}
+    <tr>
+      <td class="rank">{{add $i 1}}</td>
+      <td class="name">{{$p.Emoji}} {{$p.Name}}</td>
+      <td class="num">{{$p.Games}}</td>
+      <td class="num">{{$p.Wins}}</td>
+      <td class="num">{{$p.Seconds}}</td>
+      <td class="num">{{$p.Points}}</td>
+      <td class="num">{{printf "%.2f" $p.PPG}}</td>
+    </tr>
+    {{end}} {{else}}
+    <tr>
+      <td colspan="7">Ingen resultater endnu.</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}

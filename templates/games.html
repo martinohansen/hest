@@ -1,0 +1,29 @@
+{{define "content"}}
+<div class="stack">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Dato</th>
+        <th>Deltagere</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{if .Games}} {{range .Games}}
+      <tr>
+        <td>{{.PlayedAt.Format "2006-01-02"}}</td>
+        <td>
+          {{range $i, $p := .Participants}} {{if $i}}, {{end}} {{if eq $i
+          0}}<strong>{{$p.Emoji}} {{$p.Name}}</strong>{{else if eq $i 1}}<em
+            >{{$p.Emoji}} {{$p.Name}}</em
+          >{{else}}{{$p.Emoji}} {{$p.Name}}{{end}} {{end}}
+        </td>
+      </tr>
+      {{end}} {{else}}
+      <tr>
+        <td colspan="2">Ingen spil registreret endnu.</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}
