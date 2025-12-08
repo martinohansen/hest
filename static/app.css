@@ -208,6 +208,12 @@ input[type="number"] {
   margin: 0;
 }
 
+.success {
+  color: #2e7d32;
+  margin: 0;
+  font-weight: 600;
+}
+
 .notice {
   padding: 12px;
   border: 1px solid var(--border);

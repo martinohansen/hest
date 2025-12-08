@@ -136,70 +136,8 @@ func (a *App) handleScoreGame(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleSaveGame(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	username, ok := a.requireAuth(w, r)
+	_, ok := a.saveGameCommon(w, r)
 	if !ok {
-		return
-	}
-
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "bad form", http.StatusBadRequest)
-		return
-	}
-
-	ids, err := parseIDs(r.Form["player_id"])
-	if err != nil {
-		http.Error(w, "bad player selection", http.StatusBadRequest)
-		return
-	}
-
-	uniqueIDs := db.Dedupe(ids)
-	if len(uniqueIDs) < 2 {
-		http.Error(w, "pick at least two players", http.StatusBadRequest)
-		return
-	}
-
-	players, err := a.playersByIDs(uniqueIDs)
-	if err != nil {
-		http.Error(w, "failed to load players", http.StatusInternalServerError)
-		return
-	}
-	if len(players) < len(uniqueIDs) {
-		http.Error(w, "unknown player selected", http.StatusBadRequest)
-		return
-	}
-
-	form := newGameForm(players).withDate(r.FormValue("played_at"))
-
-	winnerID, err := parseRequiredID(r.FormValue("winner_id"))
-	if err != nil {
-		a.renderScoring(w, r, form.withError("Pick a winner."))
-		return
-	}
-	secondID, err := parseRequiredID(r.FormValue("second_id"))
-	if err != nil {
-		a.renderScoring(w, r, form.withSelection(winnerID, secondID).withError("Pick a winner and a 2nd place."))
-		return
-	}
-
-	form = form.withSelection(winnerID, secondID)
-	if msg := validatePlacement(winnerID, secondID, uniqueIDs); msg != "" {
-		a.renderScoring(w, r, form.withError(msg))
-		return
-	}
-
-	playedAt, msg := parsePlayedAt(form.PlayedAt)
-	if msg != "" {
-		a.renderScoring(w, r, form.withError(msg))
-		return
-	}
-
-	if err := a.store.AddGame(playedAt, uniqueIDs, winnerID, secondID, username); err != nil {
-		http.Error(w, "db error", http.StatusInternalServerError)
 		return
 	}
 
@@ -210,11 +148,93 @@ func (a *App) handleSaveGame(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func (a *App) handleSaveAndNewGame(w http.ResponseWriter, r *http.Request) {
+	players, ok := a.saveGameCommon(w, r)
+	if !ok {
+		return
+	}
+
+	// Reset the form with the same players for a new game
+	a.renderScoring(w, r, newGameForm(players).withSuccess("Kamp tilføjet"))
+}
+
+func (a *App) saveGameCommon(w http.ResponseWriter, r *http.Request) ([]Player, bool) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return nil, false
+	}
+
+	username, ok := a.requireAuth(w, r)
+	if !ok {
+		return nil, false
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "bad form", http.StatusBadRequest)
+		return nil, false
+	}
+
+	ids, err := parseIDs(r.Form["player_id"])
+	if err != nil {
+		http.Error(w, "bad player selection", http.StatusBadRequest)
+		return nil, false
+	}
+
+	uniqueIDs := db.Dedupe(ids)
+	if len(uniqueIDs) < 2 {
+		http.Error(w, "pick at least two players", http.StatusBadRequest)
+		return nil, false
+	}
+
+	players, err := a.playersByIDs(uniqueIDs)
+	if err != nil {
+		http.Error(w, "failed to load players", http.StatusInternalServerError)
+		return nil, false
+	}
+	if len(players) < len(uniqueIDs) {
+		http.Error(w, "unknown player selected", http.StatusBadRequest)
+		return nil, false
+	}
+
+	form := newGameForm(players).withDate(r.FormValue("played_at"))
+
+	winnerID, err := parseRequiredID(r.FormValue("winner_id"))
+	if err != nil {
+		a.renderScoring(w, r, form.withError("Pick a winner."))
+		return nil, false
+	}
+	secondID, err := parseRequiredID(r.FormValue("second_id"))
+	if err != nil {
+		a.renderScoring(w, r, form.withSelection(winnerID, secondID).withError("Pick a winner and a 2nd place."))
+		return nil, false
+	}
+
+	form = form.withSelection(winnerID, secondID)
+	if msg := validatePlacement(winnerID, secondID, uniqueIDs); msg != "" {
+		a.renderScoring(w, r, form.withError(msg))
+		return nil, false
+	}
+
+	playedAt, msg := parsePlayedAt(form.PlayedAt)
+	if msg != "" {
+		a.renderScoring(w, r, form.withError(msg))
+		return nil, false
+	}
+
+	if err := a.store.AddGame(playedAt, uniqueIDs, winnerID, secondID, username); err != nil {
+		http.Error(w, "db error", http.StatusInternalServerError)
+		return nil, false
+	}
+
+	return players, true
+}
+
 type gameForm struct {
 	Path     string
 	Players  []Player
 	PlayedAt string
 	Error    string
+	Success  string
 	WinnerID int
 	SecondID int
 }
@@ -236,17 +256,6 @@ func (f *gameForm) fillDefaults() {
 	if f.Path == "" {
 		f.Path = "/new"
 	}
-	if f.WinnerID == 0 && len(f.Players) > 0 {
-		f.WinnerID = f.Players[0].ID
-	}
-	if f.SecondID == 0 && len(f.Players) > 1 {
-		for _, p := range f.Players {
-			if p.ID != f.WinnerID {
-				f.SecondID = p.ID
-				break
-			}
-		}
-	}
 }
 
 func (f gameForm) withError(msg string) gameForm {
@@ -264,6 +273,14 @@ func (f gameForm) withSelection(winnerID, secondID int) gameForm {
 
 func (f gameForm) withDate(playedAt string) gameForm {
 	f.PlayedAt = strings.TrimSpace(playedAt)
+	f.fillDefaults()
+	return f
+}
+
+func (f gameForm) withSuccess(msg string) gameForm {
+	f.Success = msg
+	f.WinnerID = 0
+	f.SecondID = 0
 	f.fillDefaults()
 	return f
 }

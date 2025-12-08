@@ -47,9 +47,12 @@
 </div>
 {{end}} {{define "score"}}
 <div class="stack">
-  <form action="/games/save" method="post" class="stack">
+  <form id="score-form" action="/games/save" method="post" class="stack">
     {{if .Error}}
     <p class="error">{{.Error}}</p>
+    {{end}}
+    {{if .Success}}
+    <p class="success">{{.Success}}</p>
     {{end}}
     <label class="stack">
       <span>Dato</span>
@@ -73,6 +76,7 @@
       <label class="stack">
         <span>Vinder</span>
         <select name="winner_id">
+          <option value="" {{if eq $.WinnerID 0}}selected{{end}}>Vælg...</option>
           {{range .Players}}
           <option value="{{.ID}}" {{if eq $.WinnerID .ID}}selected{{end}}>
             {{.Emoji}} {{.Name}}
@@ -83,6 +87,7 @@
       <label class="stack">
         <span>2. plads</span>
         <select name="second_id">
+          <option value="" {{if eq $.SecondID 0}}selected{{end}}>Vælg...</option>
           {{range .Players}}
           <option value="{{.ID}}" {{if eq $.SecondID .ID}}selected{{end}}>
             {{.Emoji}} {{.Name}}
@@ -96,6 +101,15 @@
       <button type="submit">Gem</button>
       <button
         type="button"
+        hx-post="/games/save-and-new"
+        hx-include="#score-form"
+        hx-target="#step-container"
+        hx-swap="innerHTML"
+      >
+        Gem og tilføj ny
+      </button>
+      <button
+        type="button"
         hx-get="/new?partial=1"
         hx-target="#step-container"
         hx-swap="innerHTML"
@@ -105,13 +119,5 @@
       </button>
     </div>
   </form>
-</div>
-{{end}} {{define "success"}}
-<div class="notice">
-  <p>Spil gemt.</p>
-  <p>
-    <a href="/new">Tilføj et nyt</a> |
-    <a href="/">Tilbage til rangliste</a>
-  </p>
 </div>
 {{end}}
