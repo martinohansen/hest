@@ -114,6 +114,15 @@ h1 {
   color: var(--muted);
 }
 
+.table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.table th.sortable:hover {
+  color: var(--accent);
+}
+
 .table tbody tr:nth-child(even) {
   background: transparent;
 }
@@ -152,7 +161,7 @@ button {
 }
 
 button:hover {
-  opacity: 0.92;
+  opacity: 0.85;
 }
 
 button.ghost {

@@ -1,20 +1,45 @@
 {{define "content"}}
-<table class="table">
+<table class="table" id="leaderboard">
   <thead>
     <tr>
       <th class="rank">#</th>
       <th class="name"></th>
-      <th class="num">K</th>
-      <th class="num">V</th>
-      <th class="num">2</th>
-      <th class="num">P</th>
-      <th class="num">PPK</th>
+      <th class="num sortable"
+          hx-get="/?sort=games&dir={{if and (eq .SortBy "games") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-target="#leaderboard"
+          hx-swap="outerHTML">
+        K{{if eq .SortBy "games"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
+      </th>
+      <th class="num sortable"
+          hx-get="/?sort=wins&dir={{if and (eq .SortBy "wins") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-target="#leaderboard"
+          hx-swap="outerHTML">
+        V{{if eq .SortBy "wins"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
+      </th>
+      <th class="num sortable"
+          hx-get="/?sort=seconds&dir={{if and (eq .SortBy "seconds") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-target="#leaderboard"
+          hx-swap="outerHTML">
+        2{{if eq .SortBy "seconds"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
+      </th>
+      <th class="num sortable"
+          hx-get="/?sort=points&dir={{if and (eq .SortBy "points") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-target="#leaderboard"
+          hx-swap="outerHTML">
+        P{{if eq .SortBy "points"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
+      </th>
+      <th class="num sortable"
+          hx-get="/?sort=ppg&dir={{if and (eq .SortBy "ppg") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-target="#leaderboard"
+          hx-swap="outerHTML">
+        PPK{{if eq .SortBy "ppg"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
+      </th>
     </tr>
   </thead>
   <tbody>
-    {{if .Players}} {{range $i, $p := .Players}}
+    {{if .Players}} {{range $p := .Players}}
     <tr>
-      <td class="rank">{{add $i 1}}</td>
+      <td class="rank">{{$p.OriginalRank}}</td>
       <td class="name">{{$p.Emoji}} {{$p.Name}}</td>
       <td class="num">{{$p.Games}}</td>
       <td class="num">{{$p.Wins}}</td>

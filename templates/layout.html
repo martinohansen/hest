@@ -38,6 +38,7 @@
         if (target.id === "horse-icon") {
           const audio = document.getElementById("horse-sound");
           if (audio) {
+            audio.volume = 0.5;
             audio.currentTime = 0;
             audio.play();
           }
