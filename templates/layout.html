@@ -30,11 +30,15 @@
       </footer>
     </div>
     <script>
+      // Easter egg: Track horse clicks
+      let horseClickCount = 0;
+      let horseClickTimeout = null;
+
       document.addEventListener("click", function (event) {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
 
-        // Horse sound
+        // Horse sound and roll
         if (target.id === "horse-icon") {
           const audio = document.getElementById("horse-sound");
           if (audio) {
@@ -42,6 +46,23 @@
             audio.currentTime = 0;
             audio.play();
           }
+
+          // Horse roll
+          horseClickCount++;
+          if (horseClickTimeout) {
+            clearTimeout(horseClickTimeout);
+          }
+          horseClickTimeout = setTimeout(function() {
+            horseClickCount = 0;
+          }, 2000);
+          if (horseClickCount >= 3) {
+            horseClickCount = 0;
+            document.body.classList.add("page-roll");
+            setTimeout(function() {
+              document.body.classList.remove("page-roll");
+            }, 2000);
+          }
+
           return;
         }
 

@@ -133,6 +133,14 @@ h1 {
   gap: 12px;
 }
 
+.stack > p {
+  margin: 0 0 ;
+}
+
+.stack > div > p {
+  margin: 0 0 8px 0;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -249,4 +257,18 @@ input[type="number"] {
   .hide-small {
     display: none;
   }
+}
+
+/* Easter egg: Page roll animation */
+@keyframes pageRoll {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+body.page-roll {
+  animation: pageRoll 2s ease-in-out;
 }
