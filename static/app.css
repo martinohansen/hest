@@ -128,11 +128,16 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  justify-content: flex-end;
 }
 
 .actions button {
   flex: 1;
   min-width: 120px;
+}
+
+.actions button.ghost {
+  order: -1;
 }
 
 button {
@@ -219,4 +224,20 @@ input[type="number"] {
   border: 1px solid var(--border);
   background: #f3f4f6;
   border-radius: 8px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding: 16px;
+  color: var(--bg);
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .hide-small {
+    display: none;
+  }
 }

@@ -4,6 +4,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:image" content="/static/hest.jp2" />
+    <meta property="og:title" content="🐴 Stilling" />
+    <meta property="og:type" content="website" />
     <title>Stilling</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link rel="stylesheet" href="/static/app.css" />
@@ -12,17 +15,36 @@
   <body>
     <div class="container">
       <nav class="nav">
-        🐴
+        <span id="horse-icon" style="cursor: pointer;">🐴</span>
         <a href="/" {{if eq .Path "/"}}class="active"{{end}}>Stilling</a>
         <a href="/games" {{if eq .Path "/games"}}class="active"{{end}}>Kampe</a>
         <a href="/new" class="push {{if eq .Path "/new"}}active{{end}}">Tilføj kamp</a>
       </nav>
+      <audio id="horse-sound" preload="auto">
+        <source src="/static/hest.mp3" type="audio/mpeg">
+      </audio>
       <main class="card">{{template "content" .}}</main>
+      <footer class="footer">
+        <span></span>
+        <span>{{version}}</span>
+      </footer>
     </div>
     <script>
       document.addEventListener("click", function (event) {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
+
+        // Horse sound
+        if (target.id === "horse-icon") {
+          const audio = document.getElementById("horse-sound");
+          if (audio) {
+            audio.currentTime = 0;
+            audio.play();
+          }
+          return;
+        }
+
+        // Select all players
         if (target.id !== "select-all-players") return;
         const list = document.getElementById("player-list");
         if (!list) return;

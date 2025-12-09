@@ -2,19 +2,11 @@ package main
 
 import (
 	"net/http"
-	"time"
 )
-
-type gameDisplay struct {
-	PlayedAt time.Time
-	Winner   Player
-	Second   Player
-	Others   []Player
-}
 
 type gamesView struct {
 	Path  string
-	Games []gameDisplay
+	Games []Game
 }
 
 func newGameView() gamesView {
@@ -24,22 +16,7 @@ func newGameView() gamesView {
 }
 
 func (g gamesView) withGames(games []Game) gamesView {
-	displays := make([]gameDisplay, len(games))
-	for i, game := range games {
-		display := gameDisplay{
-			PlayedAt: game.PlayedAt,
-			Winner:   Player(game.Winner),
-			Second:   Player(game.Second),
-		}
-		// Add others (participants who are not winner or second)
-		for _, p := range game.Participants {
-			if p.ID != game.Winner.ID && p.ID != game.Second.ID {
-				display.Others = append(display.Others, Player(p))
-			}
-		}
-		displays[i] = display
-	}
-	g.Games = displays
+	g.Games = games
 	return g
 }
 

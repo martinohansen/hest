@@ -6,7 +6,7 @@
         <th>Dato</th>
         <th style="white-space: nowrap">Vinder</th>
         <th style="white-space: nowrap">2. plads</th>
-        <th>Resterende</th>
+        <th class="hide-small">Deltagere</th>
       </tr>
     </thead>
     <tbody>
@@ -15,13 +15,11 @@
         <td>{{.PlayedAt.Format "2006-01-02"}}</td>
         <td style="white-space: nowrap">{{.Winner.Emoji}} {{.Winner.Name}}</td>
         <td style="white-space: nowrap">{{.Second.Emoji}} {{.Second.Name}}</td>
-        <td>
-          {{range $i, $p := .Others}} {{if $i}} {{end}} {{$p.Emoji}} {{end}}
-        </td>
+        <td class="hide-small">{{range .Participants}} {{.Emoji}}{{end}}</td>
       </tr>
       {{end}} {{else}}
       <tr>
-        <td colspan="4">Ingen spil registreret endnu.</td>
+        <td colspan="3">Ingen spil registreret endnu.</td>
       </tr>
       {{end}}
     </tbody>

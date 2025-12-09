@@ -50,8 +50,7 @@
   <form id="score-form" action="/games/save" method="post" class="stack">
     {{if .Error}}
     <p class="error">{{.Error}}</p>
-    {{end}}
-    {{if .Success}}
+    {{end}} {{if .Success}}
     <p class="success">{{.Success}}</p>
     {{end}}
     <label class="stack">
@@ -76,7 +75,9 @@
       <label class="stack">
         <span>Vinder</span>
         <select name="winner_id">
-          <option value="" {{if eq $.WinnerID 0}}selected{{end}}>Vælg...</option>
+          <option value="" {{if eq $.WinnerID 0}}selected{{end}}>
+            Vælg...
+          </option>
           {{range .Players}}
           <option value="{{.ID}}" {{if eq $.WinnerID .ID}}selected{{end}}>
             {{.Emoji}} {{.Name}}
@@ -87,7 +88,9 @@
       <label class="stack">
         <span>2. plads</span>
         <select name="second_id">
-          <option value="" {{if eq $.SecondID 0}}selected{{end}}>Vælg...</option>
+          <option value="" {{if eq $.SecondID 0}}selected{{end}}>
+            Vælg...
+          </option>
           {{range .Players}}
           <option value="{{.ID}}" {{if eq $.SecondID .ID}}selected{{end}}>
             {{.Emoji}} {{.Name}}
@@ -98,7 +101,6 @@
     </div>
 
     <div class="actions">
-      <button type="submit">Gem</button>
       <button
         type="button"
         hx-post="/games/save-and-new"
@@ -108,6 +110,7 @@
       >
         Gem og tilføj ny
       </button>
+      <button type="submit">Gem</button>
       <button
         type="button"
         hx-get="/new?partial=1"
