@@ -1,18 +1,24 @@
 package main
 
 import (
-	"html/template"
 	"net/http"
-	"os"
-	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/martinohansen/hest/internal/db"
 )
 
+const dateLayout = "2006-01-02"
+
 type App struct {
 	store *db.Store
 }
+
+type (
+	Player db.Player
+	Game   db.Game
+)
 
 func newApp(store *db.Store) *App {
 	return &App{store: store}
@@ -32,55 +38,30 @@ func (a *App) routes() http.Handler {
 	return mux
 }
 
-func (a *App) renderTemplate(w http.ResponseWriter, tplName string, data any, files ...string) {
-	if err := render(tplName, w, data, files...); err != nil {
-		http.Error(w, "render error", http.StatusInternalServerError)
-	}
-}
-
-func render(tplName string, w http.ResponseWriter, data any, files ...string) error {
-	for i, f := range files {
-		files[i] = filepath.Clean(f)
-	}
-	funcs := template.FuncMap{
-		"add": func(a, b int) int { return a + b },
-	}
-	tpl, err := template.New(filepath.Base(files[0])).Funcs(funcs).ParseFS(templateFS, files...)
-	if err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	return tpl.ExecuteTemplate(w, tplName, data)
-}
-
-func (a *App) requireAuth(w http.ResponseWriter, r *http.Request) (string, bool) {
-	user, pass, ok := r.BasicAuth()
-	if !ok || pass != requiredPassword() || user == "" {
-		a.unauthorized(w)
-		return "", false
-	}
-	return strings.TrimSpace(user), true
-}
-
-func (a *App) unauthorized(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", `Basic realm="Hest"`)
-	w.WriteHeader(http.StatusUnauthorized)
-	_, _ = w.Write([]byte("authorization required"))
-}
-
-func requiredPassword() string {
-	if p := strings.TrimSpace(os.Getenv("HEST_PASSWORD")); p != "" {
-		return p
-	}
-	return "hest"
-}
-
-func (a *App) listPlayers() ([]Player, error) {
-	players, err := a.store.ListPlayers()
+func (a *App) Leaderboard() ([]Player, error) {
+	players, err := a.store.ListPlayersByPoints()
 	if err != nil {
 		return nil, err
 	}
-	return toPlayers(players), nil
+
+	result := make([]Player, len(players))
+	for i, p := range players {
+		result[i] = Player(p)
+	}
+	return result, nil
+}
+
+func (a *App) ListPlayers() ([]Player, error) {
+	players, err := a.store.ListPlayersByName()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]Player, len(players))
+	for i, p := range players {
+		result[i] = Player(p)
+	}
+	return result, nil
 }
 
 func (a *App) listGames() ([]Game, error) {
@@ -88,7 +69,12 @@ func (a *App) listGames() ([]Game, error) {
 	if err != nil {
 		return nil, err
 	}
-	return toGames(games), nil
+
+	result := make([]Game, len(games))
+	for i, g := range games {
+		result[i] = Game(g)
+	}
+	return result, nil
 }
 
 func (a *App) playersByIDs(ids []int) ([]Player, error) {
@@ -103,5 +89,60 @@ func (a *App) playersByIDs(ids []int) ([]Player, error) {
 	if len(players) == 0 {
 		return nil, nil
 	}
-	return toPlayers(players), nil
+
+	result := make([]Player, len(players))
+	for i, p := range players {
+		result[i] = Player(p)
+	}
+	return result, nil
+}
+
+func parseIDs(values []string) ([]int, error) {
+	var ids []int
+	for _, v := range values {
+		id, err := strconv.Atoi(strings.TrimSpace(v))
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
+// Return player ID from string or error
+func parsePlayer(id string) (int, error) {
+	return strconv.Atoi(strings.TrimSpace(id))
+}
+
+func validatePlacement(winnerID, secondID int, participantIDs []int) string {
+	if winnerID == 0 || secondID == 0 {
+		return "Pick a winner and a 2nd place."
+	}
+	if winnerID == secondID {
+		return "Winner and 2nd place must be different players."
+	}
+
+	idSet := make(map[int]struct{}, len(participantIDs))
+	for _, id := range participantIDs {
+		idSet[id] = struct{}{}
+	}
+	if _, ok := idSet[winnerID]; !ok {
+		return "Winner must be part of the game."
+	}
+	if _, ok := idSet[secondID]; !ok {
+		return "2nd place must be part of the game."
+	}
+	return ""
+}
+
+func parsePlayedAt(raw string) (time.Time, string) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return time.Now(), ""
+	}
+	playedAt, err := time.Parse(dateLayout, raw)
+	if err != nil {
+		return time.Time{}, "Invalid date."
+	}
+	return playedAt, ""
 }

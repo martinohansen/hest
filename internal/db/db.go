@@ -45,10 +45,6 @@ func Open(path string) (*Store, error) {
 	}
 
 	store := &Store{db: database}
-	if err := store.ensurePlayerEmojis(); err != nil {
-		database.Close()
-		return nil, err
-	}
 
 	return store, nil
 }
@@ -57,7 +53,7 @@ func ensureSchema(db *sql.DB) error {
 	if err := createTables(db); err != nil {
 		return err
 	}
-	return ensurePlayerEmojiColumn(db)
+	return nil
 }
 
 func createTables(db *sql.DB) error {
@@ -88,125 +84,6 @@ CREATE TABLE IF NOT EXISTS game_players (
 	return err
 }
 
-func ensurePlayerEmojiColumn(db *sql.DB) error {
-	const query = `PRAGMA table_info(players);`
-	rows, err := db.Query(query)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var (
-			cid        int
-			name       string
-			ctype      string
-			notNull    int
-			dfltValue  any
-			primaryKey int
-		)
-		if err := rows.Scan(&cid, &name, &ctype, &notNull, &dfltValue, &primaryKey); err != nil {
-			return err
-		}
-		if strings.EqualFold(name, "emoji") {
-			return rows.Err()
-		}
-	}
-	if err := rows.Err(); err != nil {
-		return err
-	}
-
-	_, err = db.Exec(`ALTER TABLE players ADD COLUMN emoji TEXT NOT NULL DEFAULT ''`)
-	return err
-}
-
-func (s *Store) ensurePlayerEmojis() error {
-	rows, err := s.db.Query(`SELECT id, name, COALESCE(emoji, '') FROM players ORDER BY id`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	type playerRow struct {
-		id    int
-		name  string
-		emoji string
-	}
-
-	var rowsData []playerRow
-	used := make(map[string]struct{})
-
-	for rows.Next() {
-		var p playerRow
-		if err := rows.Scan(&p.id, &p.name, &p.emoji); err != nil {
-			return err
-		}
-		p.emoji = strings.TrimSpace(p.emoji)
-		if p.emoji != "" {
-			used[p.emoji] = struct{}{}
-		}
-		rowsData = append(rowsData, p)
-	}
-	if err := rows.Err(); err != nil {
-		return err
-	}
-	if len(rowsData) == 0 {
-		return nil
-	}
-
-	tx, err := s.db.Begin()
-	if err != nil {
-		return err
-	}
-	for _, p := range rowsData {
-		if p.emoji != "" {
-			continue
-		}
-		emoji := chooseEmoji(p.name, p.id, used)
-		used[emoji] = struct{}{}
-		if _, err := tx.Exec(`UPDATE players SET emoji = ? WHERE id = ?`, emoji, p.id); err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
-
-	return tx.Commit()
-}
-
-func (s *Store) usedEmojis() (map[string]struct{}, error) {
-	rows, err := s.db.Query(`SELECT emoji FROM players WHERE TRIM(COALESCE(emoji, '')) != ''`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	used := make(map[string]struct{})
-	for rows.Next() {
-		var emoji string
-		if err := rows.Scan(&emoji); err != nil {
-			return nil, err
-		}
-		emoji = strings.TrimSpace(emoji)
-		if emoji == "" {
-			continue
-		}
-		used[emoji] = struct{}{}
-	}
-	return used, rows.Err()
-}
-
-func (s *Store) nextEmoji(name string) (string, error) {
-	used, err := s.usedEmojis()
-	if err != nil {
-		return "", err
-	}
-	emoji := chooseEmoji(name, 0, used)
-	if emoji == "" {
-		return "", fmt.Errorf("no emojis available")
-	}
-	return emoji, nil
-}
-
 func (s *Store) Close() error {
 	if s == nil || s.db == nil {
 		return nil
@@ -233,11 +110,7 @@ func scanPlayer(scanner interface{ Scan(...any) error }) (Player, error) {
 }
 
 func (s *Store) AddPlayer(name string) error {
-	emoji, err := s.nextEmoji(name)
-	if err != nil {
-		return err
-	}
-	_, err = s.db.Exec(`INSERT INTO players (name, emoji) VALUES (?, ?)`, name, emoji)
+	_, err := s.db.Exec(`INSERT INTO players (name, emoji) VALUES (?, ?)`, name, emoji(name))
 	return err
 }
 
@@ -326,7 +199,27 @@ ORDER BY gp.game_id, p.name
 	return participantMap, rows.Err()
 }
 
-func (s *Store) ListPlayers() ([]Player, error) {
+func (s *Store) ListPlayersByName() ([]Player, error) {
+	rows, err := s.db.Query(playerTotalsQuery("", `ORDER BY name ASC`))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var players []Player
+	for rows.Next() {
+		p, err := scanPlayer(rows)
+		if err != nil {
+			return nil, err
+		}
+		players = append(players, p)
+	}
+	return players, rows.Err()
+}
+
+// ListPlayersByPoints returns all players ordered by their points with
+// tiebreakers, in order of wins, seconds, games played, and lastly name.
+func (s *Store) ListPlayersByPoints() ([]Player, error) {
 	rows, err := s.db.Query(playerTotalsQuery("", `
 ORDER BY points DESC, wins DESC, seconds DESC, games DESC, name ASC
 `))
