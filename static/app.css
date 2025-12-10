@@ -236,7 +236,7 @@ input[type="number"] {
 
 .list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 8px;
 }
 
@@ -273,18 +273,51 @@ input[type="number"] {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .h2h-name {
   margin: 0;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.h2h-name-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.h2h-name--right .h2h-name-link {
+  justify-content: flex-end;
 }
 
 .h2h-name--right {
   text-align: right;
 }
 
+.h2h-name--left .h2h-name-link {
+  justify-content: flex-start;
+}
+
 .h2h-name--left {
   text-align: left;
+}
+
+.h2h-emoji {
+  flex-shrink: 0;
+  font-size: 1.1em;
+}
+
+.h2h-name-text {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .h2h-stat-grid {

@@ -43,9 +43,17 @@
     <div class="h2h-results">
       <div class="h2h-player">
         <h1 class="h2h-name h2h-name--right">
-          <a href="/player?id={{.Stats.Player1.ID}}"
-            >{{.Stats.Player1.Name}} {{.Stats.Player1.Emoji}}</a
+          <a
+            class="h2h-name-link"
+            href="/player?id={{.Stats.Player1.ID}}"
+            aria-label="{{.Stats.Player1.Name}} {{.Stats.Player1.Emoji}}"
+            title="{{.Stats.Player1.Name}} {{.Stats.Player1.Emoji}}"
           >
+            <span class="h2h-name-text">{{.Stats.Player1.Name}}</span>
+            <span class="h2h-emoji" aria-hidden="true"
+              >{{.Stats.Player1.Emoji}}</span
+            >
+          </a>
         </h1>
         <div class="h2h-stat-grid">
           <div class="stat">
@@ -76,9 +84,17 @@
 
       <div class="h2h-player">
         <h1 class="h2h-name h2h-name--left">
-          <a href="/player?id={{.Stats.Player2.ID}}"
-            >{{.Stats.Player2.Emoji}} {{.Stats.Player2.Name}}</a
+          <a
+            class="h2h-name-link"
+            href="/player?id={{.Stats.Player2.ID}}"
+            aria-label="{{.Stats.Player2.Emoji}} {{.Stats.Player2.Name}}"
+            title="{{.Stats.Player2.Emoji}} {{.Stats.Player2.Name}}"
           >
+            <span class="h2h-emoji" aria-hidden="true"
+              >{{.Stats.Player2.Emoji}}</span
+            >
+            <span class="h2h-name-text">{{.Stats.Player2.Name}}</span>
+          </a>
         </h1>
         <div class="h2h-stat-grid">
           <div class="stat">
