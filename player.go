@@ -12,6 +12,7 @@ type playerDetailView struct {
 	Path        string
 	Player      Player
 	GameHistory []PlayerGameHistoryEntry
+	Games       []Game
 	HasGames    bool
 }
 
@@ -25,6 +26,11 @@ func newPlayerDetailView(player Player) playerDetailView {
 func (p playerDetailView) withGameHistory(history []PlayerGameHistoryEntry) playerDetailView {
 	p.GameHistory = history
 	p.HasGames = len(history) > 0
+	return p
+}
+
+func (p playerDetailView) withGames(games []Game) playerDetailView {
+	p.Games = games
 	return p
 }
 
@@ -64,6 +70,17 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		history[i] = PlayerGameHistoryEntry(h)
 	}
 
-	view := newPlayerDetailView(player).withGameHistory(history)
+	gamesDB, err := a.store.PlayerGames(playerID)
+	if err != nil {
+		http.Error(w, "failed to load player games", http.StatusInternalServerError)
+		return
+	}
+
+	games := make([]Game, len(gamesDB))
+	for i, g := range gamesDB {
+		games[i] = Game(g)
+	}
+
+	view := newPlayerDetailView(player).withGameHistory(history).withGames(games)
 	renderTemplate(w, "layout", view, "templates/layout.html", "templates/player.html")
 }

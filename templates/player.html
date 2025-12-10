@@ -27,9 +27,41 @@
 {{if .HasGames}}
 <h2 class="stat-label">Points pr. kamp</h2>
 <canvas id="ppg-chart"></canvas>
-{{else}}
-<p>Ingen kampe registreret endnu.</p>
-{{end}} {{if .HasGames}}
+
+<h2 class="stat-label" style="margin-top: 2rem"></h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Dato</th>
+      <th style="white-space: nowrap">Vinder</th>
+      <th style="white-space: nowrap">2. plads</th>
+      <th class="hide-small">Deltagere</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Games}}
+    <tr>
+      <td>{{.PlayedAt.Format "2006-01-02"}}</td>
+      <td style="white-space: nowrap">
+        <a href="/player?id={{.Winner.ID}}"
+          >{{.Winner.Emoji}} {{.Winner.Name}}</a
+        >
+      </td>
+      <td style="white-space: nowrap">
+        <a href="/player?id={{.Second.ID}}"
+          >{{.Second.Emoji}} {{.Second.Name}}</a
+        >
+      </td>
+      <td class="hide-small">
+        {{range .Participants}}<a href="/player?id={{.ID}}" title="{{.Name}}"
+          >{{.Emoji}}</a
+        >{{end}}
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
   const gameHistory = [
@@ -77,4 +109,6 @@
     }
   });
 </script>
+{{else}}
+<p>Ingen kampe registreret endnu.</p>
 {{end}} {{end}}

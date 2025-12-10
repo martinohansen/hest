@@ -41,6 +41,15 @@ type PlayerGameHistoryEntry struct {
 	PPG          float64
 }
 
+type H2HStats struct {
+	Player1       Player
+	Player2       Player
+	SharedGames   int
+	Player1Stats  Player
+	Player2Stats  Player
+	SharedGamesList []Game
+}
+
 func Open(path string) (*Store, error) {
 	database, err := sql.Open("sqlite3", path+"?_foreign_keys=on")
 	if err != nil {
@@ -249,6 +258,63 @@ ORDER BY played_at ASC, id ASC
 	return history, rows.Err()
 }
 
+func (s *Store) PlayerGames(playerID int) ([]Game, error) {
+	rows, err := s.db.Query(`
+SELECT g.id, g.played_at,
+	g.winner_id, winner.name, winner.emoji,
+	g.second_id, second.name, second.emoji,
+	COALESCE(g.created_by, '')
+FROM games g
+JOIN players winner ON winner.id = g.winner_id
+JOIN players second ON second.id = g.second_id
+JOIN game_players gp ON g.id = gp.game_id
+WHERE gp.player_id = ?
+ORDER BY g.played_at DESC, g.id DESC
+`, playerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var games []Game
+	var gameIDs []int
+	for rows.Next() {
+		var (
+			g        Game
+			winnerID int
+			secondID int
+			wEmoji   string
+			sEmoji   string
+		)
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy); err != nil {
+			return nil, err
+		}
+		g.Winner.ID = winnerID
+		g.Winner.Emoji = wEmoji
+		g.Second.ID = secondID
+		g.Second.Emoji = sEmoji
+		games = append(games, g)
+		gameIDs = append(gameIDs, g.ID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(games) > 0 {
+		participantMap, err := s.loadGameParticipants(gameIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		for i, g := range games {
+			g.Participants = participantMap[g.ID]
+			games[i] = g
+		}
+	}
+
+	return games, nil
+}
+
 func (s *Store) ListPlayersByName() ([]Player, error) {
 	rows, err := s.db.Query(playerTotalsQuery("", `ORDER BY name ASC`))
 	if err != nil {
@@ -397,6 +463,134 @@ func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, seco
 
 	err = tx.Commit()
 	return err
+}
+
+// GetH2HStats returns head-to-head statistics for two players, including only games where both participated.
+func (s *Store) GetH2HStats(player1ID, player2ID int) (H2HStats, error) {
+	var stats H2HStats
+
+	// Get base player info
+	players, err := s.PlayersByIDs([]int{player1ID, player2ID})
+	if err != nil {
+		return stats, err
+	}
+	if len(players) != 2 {
+		return stats, fmt.Errorf("players not found")
+	}
+	stats.Player1 = players[0]
+	stats.Player2 = players[1]
+
+	// Get games where both players participated
+	rows, err := s.db.Query(`
+SELECT g.id, g.played_at,
+	g.winner_id, winner.name, winner.emoji,
+	g.second_id, second.name, second.emoji,
+	COALESCE(g.created_by, '')
+FROM games g
+JOIN players winner ON winner.id = g.winner_id
+JOIN players second ON second.id = g.second_id
+JOIN game_players gp1 ON g.id = gp1.game_id AND gp1.player_id = ?
+JOIN game_players gp2 ON g.id = gp2.game_id AND gp2.player_id = ?
+ORDER BY g.played_at DESC, g.id DESC
+`, player1ID, player2ID)
+	if err != nil {
+		return stats, err
+	}
+	defer rows.Close()
+
+	var games []Game
+	var gameIDs []int
+	for rows.Next() {
+		var (
+			g        Game
+			winnerID int
+			secondID int
+			wEmoji   string
+			sEmoji   string
+		)
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy); err != nil {
+			return stats, err
+		}
+		g.Winner.ID = winnerID
+		g.Winner.Emoji = wEmoji
+		g.Second.ID = secondID
+		g.Second.Emoji = sEmoji
+		games = append(games, g)
+		gameIDs = append(gameIDs, g.ID)
+	}
+	if err := rows.Err(); err != nil {
+		return stats, err
+	}
+
+	stats.SharedGames = len(games)
+
+	if len(games) > 0 {
+		participantMap, err := s.loadGameParticipants(gameIDs)
+		if err != nil {
+			return stats, err
+		}
+
+		for i, g := range games {
+			g.Participants = participantMap[g.ID]
+			games[i] = g
+		}
+	}
+
+	stats.SharedGamesList = games
+
+	// Calculate stats for player1 in shared games
+	var p1Games, p1Wins, p1Seconds int
+	for _, g := range games {
+		p1Games++
+		if g.Winner.ID == player1ID {
+			p1Wins++
+		} else if g.Second.ID == player1ID {
+			p1Seconds++
+		}
+	}
+	p1Points := p1Wins*3 + p1Seconds
+	var p1PPG float64
+	if p1Games > 0 {
+		p1PPG = float64(p1Points) / float64(p1Games)
+	}
+	stats.Player1Stats = Player{
+		ID:      player1ID,
+		Name:    stats.Player1.Name,
+		Emoji:   stats.Player1.Emoji,
+		Games:   p1Games,
+		Wins:    p1Wins,
+		Seconds: p1Seconds,
+		Points:  p1Points,
+		PPG:     p1PPG,
+	}
+
+	// Calculate stats for player2 in shared games
+	var p2Games, p2Wins, p2Seconds int
+	for _, g := range games {
+		p2Games++
+		if g.Winner.ID == player2ID {
+			p2Wins++
+		} else if g.Second.ID == player2ID {
+			p2Seconds++
+		}
+	}
+	p2Points := p2Wins*3 + p2Seconds
+	var p2PPG float64
+	if p2Games > 0 {
+		p2PPG = float64(p2Points) / float64(p2Games)
+	}
+	stats.Player2Stats = Player{
+		ID:      player2ID,
+		Name:    stats.Player2.Name,
+		Emoji:   stats.Player2.Emoji,
+		Games:   p2Games,
+		Wins:    p2Wins,
+		Seconds: p2Seconds,
+		Points:  p2Points,
+		PPG:     p2PPG,
+	}
+
+	return stats, nil
 }
 
 // playerTotalsQuery builds a query to fetch player statistics.
