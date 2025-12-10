@@ -40,7 +40,7 @@
     {{if .Players}} {{range $p := .Players}}
     <tr>
       <td class="rank">{{$p.OriginalRank}}</td>
-      <td class="name">{{$p.Emoji}} {{$p.Name}}</td>
+      <td class="name"><a href="/player?id={{$p.ID}}">{{$p.Emoji}} {{$p.Name}}</a></td>
       <td class="num">{{$p.Games}}</td>
       <td class="num">{{$p.Wins}}</td>
       <td class="num">{{$p.Seconds}}</td>

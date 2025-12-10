@@ -13,9 +13,9 @@
       {{if .Games}} {{range .Games}}
       <tr>
         <td>{{.PlayedAt.Format "2006-01-02"}}</td>
-        <td style="white-space: nowrap">{{.Winner.Emoji}} {{.Winner.Name}}</td>
-        <td style="white-space: nowrap">{{.Second.Emoji}} {{.Second.Name}}</td>
-        <td class="hide-small">{{range .Participants}} {{.Emoji}}{{end}}</td>
+        <td style="white-space: nowrap"><a href="/player?id={{.Winner.ID}}">{{.Winner.Emoji}} {{.Winner.Name}}</a></td>
+        <td style="white-space: nowrap"><a href="/player?id={{.Second.ID}}">{{.Second.Emoji}} {{.Second.Name}}</a></td>
+        <td class="hide-small">{{range .Participants}}<a href="/player?id={{.ID}}" title="{{.Name}}">{{.Emoji}}</a>{{end}}</td>
       </tr>
       {{end}} {{else}}
       <tr>

@@ -24,10 +24,14 @@ body {
 a {
   color: var(--accent);
   text-decoration: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
 }
 
 a:hover {
-  text-decoration: underline;
+  background: var(--accent-soft);
+  text-decoration: none;
 }
 
 .container {
@@ -71,6 +75,15 @@ a:hover {
 
 h1 {
   margin-top: 0;
+  margin-bottom: 12px;
+}
+
+h2.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 24px;
   margin-bottom: 12px;
 }
 
@@ -257,6 +270,42 @@ input[type="number"] {
   .hide-small {
     display: none;
   }
+}
+
+.player-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+  .player-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+canvas {
+  max-height: 300px;
 }
 
 /* Easter egg: Page roll animation */

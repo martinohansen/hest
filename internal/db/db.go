@@ -33,6 +33,14 @@ type Game struct {
 	CreatedBy    string
 }
 
+type PlayerGameHistoryEntry struct {
+	PlayedAt     time.Time
+	PointsEarned int
+	TotalPoints  int
+	GamesPlayed  int
+	PPG          float64
+}
+
 func Open(path string) (*Store, error) {
 	database, err := sql.Open("sqlite3", path+"?_foreign_keys=on")
 	if err != nil {
@@ -197,6 +205,48 @@ ORDER BY gp.game_id, p.name
 		participantMap[gameID] = append(participantMap[gameID], p)
 	}
 	return participantMap, rows.Err()
+}
+
+func (s *Store) PlayerGameHistory(playerID int) ([]PlayerGameHistoryEntry, error) {
+	rows, err := s.db.Query(`
+WITH player_games AS (
+	SELECT
+		g.id,
+		g.played_at,
+		CASE
+			WHEN g.winner_id = ? THEN 3
+			WHEN g.second_id = ? THEN 1
+			ELSE 0
+		END as points_earned
+	FROM games g
+	JOIN game_players gp ON g.id = gp.game_id
+	WHERE gp.player_id = ?
+	ORDER BY g.played_at ASC, g.id ASC
+)
+SELECT
+	played_at,
+	points_earned,
+	SUM(points_earned) OVER (ORDER BY played_at, id) as total_points,
+	ROW_NUMBER() OVER (ORDER BY played_at, id) as games_played,
+	CAST(SUM(points_earned) OVER (ORDER BY played_at, id) AS REAL) /
+		ROW_NUMBER() OVER (ORDER BY played_at, id) as ppg
+FROM player_games
+ORDER BY played_at ASC, id ASC
+`, playerID, playerID, playerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var history []PlayerGameHistoryEntry
+	for rows.Next() {
+		var entry PlayerGameHistoryEntry
+		if err := rows.Scan(&entry.PlayedAt, &entry.PointsEarned, &entry.TotalPoints, &entry.GamesPlayed, &entry.PPG); err != nil {
+			return nil, err
+		}
+		history = append(history, entry)
+	}
+	return history, rows.Err()
 }
 
 func (s *Store) ListPlayersByName() ([]Player, error) {
