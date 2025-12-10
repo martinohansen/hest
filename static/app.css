@@ -144,6 +144,10 @@ h2.stat-label {
   background: transparent;
 }
 
+.nowrap {
+  white-space: nowrap;
+}
+
 .stack {
   display: flex;
   flex-direction: column;
@@ -151,11 +155,19 @@ h2.stat-label {
 }
 
 .stack > p {
-  margin: 0 0 ;
+  margin: 0;
 }
 
 .stack > div > p {
   margin: 0 0 8px 0;
+}
+
+.stack > button {
+  margin-top: 8px;
+}
+
+.stack > .actions {
+  margin-top: 14px;
 }
 
 .actions {
@@ -163,6 +175,7 @@ h2.stat-label {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .actions button {
@@ -223,7 +236,7 @@ input[type="number"] {
 
 .list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
 }
 
@@ -242,9 +255,10 @@ input[type="number"] {
   height: 18px;
 }
 
-.h2h-selects {
+.h2h-selects,
+.score-selects {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -352,10 +366,6 @@ input[type="number"] {
 @media (max-width: 480px) {
   .hide-small {
     display: none;
-  }
-
-  .h2h-selects {
-    grid-template-columns: 1fr;
   }
 
   .player-stats {

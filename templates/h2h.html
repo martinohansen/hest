@@ -12,7 +12,7 @@
       <label class="stack">
         <span>Spiller 1</span>
         <select name="player1" required>
-          <option value="">Vælg spiller...</option>
+          <option value="">Vælg...</option>
           {{range .Players}}
           <option value="{{.ID}}" {{if eq $.Player1ID .ID}}selected{{end}}>
             {{.Emoji}} {{.Name}}
@@ -23,7 +23,7 @@
       <label class="stack">
         <span>Spiller 2</span>
         <select name="player2" required>
-          <option value="">Vælg spiller...</option>
+          <option value="">Vælg...</option>
           {{range .Players}}
           <option value="{{.ID}}" {{if eq $.Player2ID .ID}}selected{{end}}>
             {{.Emoji}} {{.Name}}
@@ -37,7 +37,7 @@
   {{end}} {{if .ShowResults}}
   <div class="stack">
     {{if eq .Stats.SharedGames 0}}
-    <p><em>Ingen fælles kampe endnu.</em></p>
+    <p><em>Ingen head-to-head kampe endnu.</em></p>
     {{else}}
 
     <div class="h2h-results">
@@ -50,9 +50,7 @@
         <div class="h2h-stat-grid">
           <div class="stat">
             <span class="stat-label responsive-label">
-              <span class="label-full" style="white-space: nowrap"
-                >2. plads</span
-              >
+              <span class="label-full nowrap">2. plads</span>
               <abbr class="label-short" title="2. plads">2</abbr>
             </span>
             <span class="stat-value">{{.Stats.Player1Stats.Seconds}}</span>
@@ -66,7 +64,7 @@
           </div>
           <div class="stat">
             <span class="stat-label responsive-label">
-              <span class="label-full">Points</span>
+              <span class="label-full">Point</span>
               <abbr class="label-short" title="Point">P</abbr>
             </span>
             <span class="stat-value">{{.Stats.Player1Stats.Points}}</span>
@@ -85,7 +83,7 @@
         <div class="h2h-stat-grid">
           <div class="stat">
             <span class="stat-label responsive-label">
-              <span class="label-full">Points</span>
+              <span class="label-full">Point</span>
               <abbr class="label-short" title="Point">P</abbr>
             </span>
             <span class="stat-value">{{.Stats.Player2Stats.Points}}</span>
@@ -99,9 +97,7 @@
           </div>
           <div class="stat">
             <span class="stat-label responsive-label">
-              <span class="label-full" style="white-space: nowrap"
-                >2. plads</span
-              >
+              <span class="label-full nowrap">2. plads</span>
               <abbr class="label-short" title="2. plads">2</abbr>
             </span>
             <span class="stat-value">{{.Stats.Player2Stats.Seconds}}</span>
@@ -114,8 +110,8 @@
       <thead>
         <tr>
           <th>Dato</th>
-          <th style="white-space: nowrap">Vinder</th>
-          <th style="white-space: nowrap">2. plads</th>
+          <th class="nowrap">Vinder</th>
+          <th class="nowrap">2. plads</th>
           <th class="hide-small">Deltagere</th>
         </tr>
       </thead>
@@ -123,12 +119,12 @@
         {{range .Stats.SharedGamesList}}
         <tr>
           <td>{{.PlayedAt.Format "2006-01-02"}}</td>
-          <td style="white-space: nowrap">
+          <td class="nowrap">
             <a href="/player?id={{.Winner.ID}}"
               >{{.Winner.Emoji}} {{.Winner.Name}}</a
             >
           </td>
-          <td style="white-space: nowrap">
+          <td class="nowrap">
             <a href="/player?id={{.Second.ID}}"
               >{{.Second.Emoji}} {{.Second.Name}}</a
             >

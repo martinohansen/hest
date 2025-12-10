@@ -4,8 +4,8 @@
     <thead>
       <tr>
         <th>Dato</th>
-        <th style="white-space: nowrap">Vinder</th>
-        <th style="white-space: nowrap">2. plads</th>
+        <th class="nowrap">Vinder</th>
+        <th class="nowrap">2. plads</th>
         <th class="hide-small">Deltagere</th>
       </tr>
     </thead>
@@ -13,12 +13,12 @@
       {{if .Games}} {{range .Games}}
       <tr>
         <td>{{.PlayedAt.Format "2006-01-02"}}</td>
-        <td style="white-space: nowrap">
+        <td class="nowrap">
           <a href="/player?id={{.Winner.ID}}"
             >{{.Winner.Emoji}} {{.Winner.Name}}</a
           >
         </td>
-        <td style="white-space: nowrap">
+        <td class="nowrap">
           <a href="/player?id={{.Second.ID}}"
             >{{.Second.Emoji}} {{.Second.Name}}</a
           >

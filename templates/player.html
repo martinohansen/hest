@@ -3,24 +3,38 @@
 
 <div class="player-stats">
   <div class="stat">
-    <span class="stat-label">Kampe</span>
+    <span class="stat-label responsive-label">
+      <span class="label-full">Kampe</span>
+      <abbr class="label-short" title="Kampe">K</abbr>
+    </span>
     <span class="stat-value">{{.Player.Games}}</span>
   </div>
   <div class="stat">
-    <span class="stat-label">Vundet</span>
+    <span class="stat-label responsive-label">
+      <span class="label-full">Vundet</span>
+      <abbr class="label-short" title="Vundet">V</abbr>
     </span>
     <span class="stat-value">{{.Player.Wins}}</span>
   </div>
   <div class="stat">
-    <span class="stat-label" style="white-space: nowrap">2. plads</span>
+    <span class="stat-label responsive-label">
+      <span class="label-full nowrap">2. plads</span>
+      <abbr class="label-short" title="2. plads">2</abbr>
+    </span>
     <span class="stat-value">{{.Player.Seconds}}</span>
   </div>
   <div class="stat">
-    <span class="stat-label">Points</span>
+    <span class="stat-label responsive-label">
+      <span class="label-full">Point</span>
+      <abbr class="label-short" title="Point">P</abbr>
+    </span>
     <span class="stat-value">{{.Player.Points}}</span>
   </div>
   <div class="stat">
-    <span class="stat-label" title="Point pr. kamp">PPK</span>
+    <span class="stat-label responsive-label">
+      <span class="label-full">Point pr. kamp</span>
+      <abbr class="label-short" title="Point pr. kamp">PPK</abbr>
+    </span>
     <span class="stat-value">{{printf "%.2f" .Player.PPG}}</span>
   </div>
 </div>
@@ -34,8 +48,8 @@
   <thead>
     <tr>
       <th>Dato</th>
-      <th style="white-space: nowrap">Vinder</th>
-      <th style="white-space: nowrap">2. plads</th>
+      <th class="nowrap">Vinder</th>
+      <th class="nowrap">2. plads</th>
       <th class="hide-small">Deltagere</th>
     </tr>
   </thead>
@@ -43,12 +57,12 @@
     {{range .Games}}
     <tr>
       <td>{{.PlayedAt.Format "2006-01-02"}}</td>
-      <td style="white-space: nowrap">
+      <td class="nowrap">
         <a href="/player?id={{.Winner.ID}}"
           >{{.Winner.Emoji}} {{.Winner.Name}}</a
         >
       </td>
-      <td style="white-space: nowrap">
+      <td class="nowrap">
         <a href="/player?id={{.Second.ID}}"
           >{{.Second.Emoji}} {{.Second.Name}}</a
         >
