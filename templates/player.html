@@ -7,11 +7,12 @@
     <span class="stat-value">{{.Player.Games}}</span>
   </div>
   <div class="stat">
-    <span class="stat-label">Sejre</span>
+    <span class="stat-label">Vundet</span>
+    </span>
     <span class="stat-value">{{.Player.Wins}}</span>
   </div>
   <div class="stat">
-    <span class="stat-label">2. pladser</span>
+    <span class="stat-label" style="white-space: nowrap">2. plads</span>
     <span class="stat-value">{{.Player.Seconds}}</span>
   </div>
   <div class="stat">
@@ -19,7 +20,7 @@
     <span class="stat-value">{{.Player.Points}}</span>
   </div>
   <div class="stat">
-    <span class="stat-label">PPK</span>
+    <span class="stat-label" title="Point pr. kamp">PPK</span>
     <span class="stat-value">{{printf "%.2f" .Player.PPG}}</span>
   </div>
 </div>
