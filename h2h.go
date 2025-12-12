@@ -9,6 +9,7 @@ import (
 
 type h2hView struct {
 	Path        string
+	Title       string
 	Players     []db.Player
 	Player1ID   int
 	Player2ID   int
@@ -18,7 +19,8 @@ type h2hView struct {
 
 func newH2HView() *h2hView {
 	return &h2hView{
-		Path: "/h2h",
+		Path:  "/h2h",
+		Title: "H2H",
 	}
 }
 

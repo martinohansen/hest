@@ -6,12 +6,14 @@ import (
 
 type gamesView struct {
 	Path  string
+	Title string
 	Games []Game
 }
 
 func newGameView() gamesView {
 	return gamesView{
-		Path: "/games",
+		Path:  "/games",
+		Title: "Kampe",
 	}
 }
 

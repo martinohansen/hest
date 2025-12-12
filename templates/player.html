@@ -43,6 +43,9 @@
 <h2 class="stat-label">Points pr. kamp</h2>
 <canvas id="ppg-chart"></canvas>
 
+<h2 class="stat-label" style="margin-top: 2rem">Placering</h2>
+<canvas id="rank-chart"></canvas>
+
 <h2 class="stat-label" style="margin-top: 2rem"></h2>
 <table class="table">
   <thead>
@@ -88,6 +91,15 @@
     {{end}}
   ];
 
+  const rankHistory = [
+    {{range .RankHistory}}
+    {
+      date: "{{.PlayedAt.Format "01/02"}}",
+      rank: {{.Rank}}
+    },
+    {{end}}
+  ];
+
   const labels = gameHistory.map(g => g.date);
   const ppgData = gameHistory.map(g => parseFloat(g.ppg));
 
@@ -118,6 +130,53 @@
           beginAtZero: true,
           ticks: {
             precision: 2
+          }
+        }
+      }
+    }
+  });
+
+  // Rank chart
+  const rankLabels = rankHistory.map(r => r.date);
+  const rankData = rankHistory.map(r => r.rank);
+
+  new Chart(document.getElementById('rank-chart'), {
+    type: 'line',
+    data: {
+      labels: rankLabels,
+      datasets: [{
+        label: 'Placering',
+        data: rankData,
+        borderColor: '#464646',
+        tension: 0.1,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 2,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Plads ' + context.parsed.y;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          reverse: true,
+          beginAtZero: false,
+          min: 1,
+          max: {{.TotalPlayers}},
+          ticks: {
+            stepSize: 1,
+            precision: 0
           }
         }
       }

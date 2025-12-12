@@ -11,6 +11,7 @@ import (
 
 type gameForm struct {
 	Path     string
+	Title    string
 	Players  []Player
 	PlayedAt string
 	Error    string
@@ -22,6 +23,7 @@ type gameForm struct {
 func newGameForm(players []Player) gameForm {
 	form := gameForm{
 		Path:     "/new",
+		Title:    "Tilføj kamp",
 		Players:  players,
 		PlayedAt: time.Now().Format(dateLayout),
 	}

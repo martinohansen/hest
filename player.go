@@ -7,18 +7,23 @@ import (
 )
 
 type PlayerGameHistoryEntry db.PlayerGameHistoryEntry
+type PlayerRankHistoryEntry db.PlayerRankHistoryEntry
 
 type playerDetailView struct {
-	Path        string
-	Player      Player
-	GameHistory []PlayerGameHistoryEntry
-	Games       []Game
-	HasGames    bool
+	Path         string
+	Title        string
+	Player       Player
+	GameHistory  []PlayerGameHistoryEntry
+	RankHistory  []PlayerRankHistoryEntry
+	Games        []Game
+	HasGames     bool
+	TotalPlayers int
 }
 
 func newPlayerDetailView(player Player) playerDetailView {
 	return playerDetailView{
 		Path:   "/player",
+		Title:  player.Name,
 		Player: player,
 	}
 }
@@ -29,8 +34,18 @@ func (p playerDetailView) withGameHistory(history []PlayerGameHistoryEntry) play
 	return p
 }
 
+func (p playerDetailView) withRankHistory(history []PlayerRankHistoryEntry) playerDetailView {
+	p.RankHistory = history
+	return p
+}
+
 func (p playerDetailView) withGames(games []Game) playerDetailView {
 	p.Games = games
+	return p
+}
+
+func (p playerDetailView) withTotalPlayers(total int) playerDetailView {
+	p.TotalPlayers = total
 	return p
 }
 
@@ -70,6 +85,17 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		history[i] = PlayerGameHistoryEntry(h)
 	}
 
+	rankHistoryDB, err := a.store.PlayerRankHistory(playerID)
+	if err != nil {
+		http.Error(w, "failed to load player rank history", http.StatusInternalServerError)
+		return
+	}
+
+	rankHistory := make([]PlayerRankHistoryEntry, len(rankHistoryDB))
+	for i, h := range rankHistoryDB {
+		rankHistory[i] = PlayerRankHistoryEntry(h)
+	}
+
 	gamesDB, err := a.store.PlayerGames(playerID)
 	if err != nil {
 		http.Error(w, "failed to load player games", http.StatusInternalServerError)
@@ -81,6 +107,12 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		games[i] = Game(g)
 	}
 
-	view := newPlayerDetailView(player).withGameHistory(history).withGames(games)
+	allPlayers, err := a.store.ListPlayersByName()
+	if err != nil {
+		http.Error(w, "failed to load total players", http.StatusInternalServerError)
+		return
+	}
+
+	view := newPlayerDetailView(player).withGameHistory(history).withRankHistory(rankHistory).withGames(games).withTotalPlayers(len(allPlayers))
 	renderTemplate(w, "layout", view, "templates/layout.html", "templates/player.html")
 }

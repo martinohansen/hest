@@ -41,6 +41,11 @@ type PlayerGameHistoryEntry struct {
 	PPG          float64
 }
 
+type PlayerRankHistoryEntry struct {
+	PlayedAt time.Time
+	Rank     int
+}
+
 type H2HStats struct {
 	Player1       Player
 	Player2       Player
@@ -251,6 +256,68 @@ ORDER BY played_at ASC, id ASC
 	for rows.Next() {
 		var entry PlayerGameHistoryEntry
 		if err := rows.Scan(&entry.PlayedAt, &entry.PointsEarned, &entry.TotalPoints, &entry.GamesPlayed, &entry.PPG); err != nil {
+			return nil, err
+		}
+		history = append(history, entry)
+	}
+	return history, rows.Err()
+}
+
+func (s *Store) PlayerRankHistory(playerID int) ([]PlayerRankHistoryEntry, error) {
+	rows, err := s.db.Query(`
+WITH player_games AS (
+	-- Get all games where target player participated
+	SELECT DISTINCT g.id, g.played_at
+	FROM games g
+	JOIN game_players gp ON g.id = gp.game_id
+	WHERE gp.player_id = ?
+	ORDER BY g.played_at ASC, g.id ASC
+),
+leaderboard_snapshots AS (
+	-- For each game, calculate ALL players' stats up to that point
+	SELECT
+		pg.played_at,
+		pg.id as game_id,
+		p.id as player_id,
+		COUNT(DISTINCT g_hist.id) as games,
+		COUNT(DISTINCT CASE WHEN g_hist.winner_id = p.id THEN g_hist.id END) as wins,
+		COUNT(DISTINCT CASE WHEN g_hist.second_id = p.id THEN g_hist.id END) as seconds,
+		(COUNT(DISTINCT CASE WHEN g_hist.winner_id = p.id THEN g_hist.id END) * 3 +
+		 COUNT(DISTINCT CASE WHEN g_hist.second_id = p.id THEN g_hist.id END)) as points
+	FROM player_games pg
+	CROSS JOIN players p
+	LEFT JOIN game_players gp_hist ON gp_hist.player_id = p.id
+	LEFT JOIN games g_hist ON g_hist.id = gp_hist.game_id
+		AND (g_hist.played_at < pg.played_at
+		     OR (g_hist.played_at = pg.played_at AND g_hist.id <= pg.id))
+	GROUP BY pg.played_at, pg.id, p.id
+),
+ranked_leaderboard AS (
+	-- Apply ranking with proper tiebreakers
+	SELECT
+		played_at,
+		player_id,
+		ROW_NUMBER() OVER (
+			PARTITION BY played_at, game_id
+			ORDER BY points DESC, wins DESC, seconds DESC, games DESC, player_id ASC
+		) as rank
+	FROM leaderboard_snapshots
+)
+SELECT played_at, rank
+FROM ranked_leaderboard
+WHERE player_id = ?
+ORDER BY played_at ASC
+`, playerID, playerID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var history []PlayerRankHistoryEntry
+	for rows.Next() {
+		var entry PlayerRankHistoryEntry
+		if err := rows.Scan(&entry.PlayedAt, &entry.Rank); err != nil {
 			return nil, err
 		}
 		history = append(history, entry)

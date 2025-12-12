@@ -12,6 +12,7 @@ type PlayerWithRank struct {
 
 type leaderboardForm struct {
 	Path    string
+	Title   string
 	Players []PlayerWithRank
 	SortBy  string
 	SortDir string
@@ -19,7 +20,8 @@ type leaderboardForm struct {
 
 func newLeaderboardForm() *leaderboardForm {
 	return &leaderboardForm{
-		Path: "/",
+		Path:  "/",
+		Title: "Stilling",
 	}
 }
 
