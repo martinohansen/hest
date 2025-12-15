@@ -47,11 +47,11 @@ type PlayerRankHistoryEntry struct {
 }
 
 type H2HStats struct {
-	Player1       Player
-	Player2       Player
-	SharedGames   int
-	Player1Stats  Player
-	Player2Stats  Player
+	Player1         Player
+	Player2         Player
+	SharedGames     int
+	Player1Stats    Player
+	Player2Stats    Player
 	SharedGamesList []Game
 }
 
@@ -265,12 +265,19 @@ ORDER BY played_at ASC, id ASC
 
 func (s *Store) PlayerRankHistory(playerID int) ([]PlayerRankHistoryEntry, error) {
 	rows, err := s.db.Query(`
-WITH player_games AS (
-	-- Get all games where target player participated
-	SELECT DISTINCT g.id, g.played_at
+WITH player_first_game AS (
+	-- Find the player's first game
+	SELECT MIN(g.played_at) as first_game_date
 	FROM games g
 	JOIN game_players gp ON g.id = gp.game_id
 	WHERE gp.player_id = ?
+),
+player_games AS (
+	-- Get ALL games from the player's first game onward
+	SELECT g.id, g.played_at
+	FROM games g
+	CROSS JOIN player_first_game pfg
+	WHERE g.played_at >= pfg.first_game_date
 	ORDER BY g.played_at ASC, g.id ASC
 ),
 leaderboard_snapshots AS (
@@ -283,13 +290,14 @@ leaderboard_snapshots AS (
 		COUNT(DISTINCT CASE WHEN g_hist.winner_id = p.id THEN g_hist.id END) as wins,
 		COUNT(DISTINCT CASE WHEN g_hist.second_id = p.id THEN g_hist.id END) as seconds,
 		(COUNT(DISTINCT CASE WHEN g_hist.winner_id = p.id THEN g_hist.id END) * 3 +
-		 COUNT(DISTINCT CASE WHEN g_hist.second_id = p.id THEN g_hist.id END)) as points
+		COUNT(DISTINCT CASE WHEN g_hist.second_id = p.id THEN g_hist.id END)) as points
 	FROM player_games pg
 	CROSS JOIN players p
 	LEFT JOIN game_players gp_hist ON gp_hist.player_id = p.id
 	LEFT JOIN games g_hist ON g_hist.id = gp_hist.game_id
 		AND (g_hist.played_at < pg.played_at
-		     OR (g_hist.played_at = pg.played_at AND g_hist.id <= pg.id))
+			OR (g_hist.played_at = pg.played_at AND g_hist.id <= pg.id)
+		)
 	GROUP BY pg.played_at, pg.id, p.id
 ),
 ranked_leaderboard AS (
