@@ -5,9 +5,10 @@ import (
 )
 
 type gamesView struct {
-	Path  string
-	Title string
-	Games []Game
+	Path       string
+	Title      string
+	Games      []Game
+	TotalGames int
 }
 
 func newGameView() gamesView {
@@ -19,6 +20,7 @@ func newGameView() gamesView {
 
 func (g gamesView) withGames(games []Game) gamesView {
 	g.Games = games
+	g.TotalGames = len(games)
 	return g
 }
 

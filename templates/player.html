@@ -192,4 +192,104 @@
 </script>
 {{else}}
 <p>Ingen kampe registreret endnu.</p>
+{{end}} {{if or (eq .Player.ID 8) (eq .Player.ID 5)}}
+<div id="airplane" style="display: none">🛩️</div>
+<div id="explosion" style="display: none">💥</div>
+
+<style>
+  #airplane {
+    position: fixed;
+    font-size: 48px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  #explosion {
+    position: fixed;
+    font-size: 64px;
+    z-index: 10000;
+    pointer-events: none;
+  }
+
+  @keyframes fly {
+    0% {
+      left: -100px;
+      top: 0%;
+    }
+    100% {
+      left: 100%;
+      top: 20%;
+    }
+  }
+
+  @keyframes explode {
+    0% {
+      transform: scale(0.5);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.5);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+
+  .airplane-flying {
+    display: block !important;
+    animation: fly linear;
+  }
+
+  .explosion-active {
+    display: block !important;
+    animation: explode 0.6s ease-out;
+  }
+</style>
+
+<script>
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      const airplane = document.getElementById("airplane");
+      const explosion = document.getElementById("explosion");
+      const h1 = document.querySelector("h1");
+
+      // Get the position of the player emoji (h1)
+      const h1Rect = h1.getBoundingClientRect();
+      const targetX = h1Rect.left;
+      const targetY = h1Rect.top;
+
+      // Calculate animation duration for constant speed (250px per second)
+      const screenWidth = window.innerWidth;
+      const distance = screenWidth + 100; // Total distance from -100px to 100% of screen
+      const speed = 250; // pixels per second
+      const duration = distance / speed;
+
+      airplane.style.animationDuration = duration + "s";
+      airplane.classList.add("airplane-flying");
+
+      // Calculate when the airplane reaches the target
+      const timeToTarget = (targetX + 100) / speed; // Time in seconds
+
+      // Show explosion when airplane reaches the emoji
+      setTimeout(function () {
+        explosion.style.left = targetX + "px";
+        explosion.style.top = targetY + "px";
+        explosion.classList.add("explosion-active");
+
+        // Hide explosion after animation completes
+        setTimeout(function () {
+          explosion.classList.remove("explosion-active");
+          explosion.style.display = "none";
+        }, 600);
+      }, timeToTarget * 1000);
+
+      // Hide the airplane immediately after animation completes
+      setTimeout(function () {
+        airplane.style.display = "none";
+      }, duration * 1000);
+    }, 500);
+  });
+</script>
 {{end}} {{end}}
