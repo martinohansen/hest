@@ -18,13 +18,15 @@ type playerDetailView struct {
 	Games        []Game
 	HasGames     bool
 	TotalPlayers int
+	Rank         int
 }
 
-func newPlayerDetailView(player Player) playerDetailView {
+func newPlayerDetailView(player Player, rank int) playerDetailView {
 	return playerDetailView{
 		Path:   "/player",
 		Title:  player.Name,
 		Player: player,
+		Rank:   rank,
 	}
 }
 
@@ -67,12 +69,27 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	players, err := a.playersByIDs([]int{playerID})
-	if err != nil || len(players) == 0 {
+	players, err := a.Leaderboard()
+	if err != nil {
+		http.Error(w, "failed to load players", http.StatusInternalServerError)
+		return
+	}
+
+	// Find player and its rank
+	var player Player
+	var rank int
+	for i, p := range players {
+		if p.ID == playerID {
+			player = p
+			rank = i + 1
+			break
+		}
+	}
+
+	if player == (Player{}) {
 		http.Error(w, "player not found", http.StatusNotFound)
 		return
 	}
-	player := players[0]
 
 	historyDB, err := a.store.PlayerGameHistory(playerID)
 	if err != nil {
@@ -107,12 +124,11 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		games[i] = Game(g)
 	}
 
-	allPlayers, err := a.store.ListPlayersByName()
-	if err != nil {
-		http.Error(w, "failed to load total players", http.StatusInternalServerError)
-		return
-	}
+	view := newPlayerDetailView(player, rank).
+		withGameHistory(history).
+		withRankHistory(rankHistory).
+		withGames(games).
+		withTotalPlayers(len(players))
 
-	view := newPlayerDetailView(player).withGameHistory(history).withRankHistory(rankHistory).withGames(games).withTotalPlayers(len(allPlayers))
 	renderTemplate(w, "layout", view, "templates/layout.html", "templates/player.html")
 }

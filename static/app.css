@@ -363,7 +363,7 @@ input[type="number"] {
 
 .player-stats {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 16px;
 }
@@ -396,13 +396,13 @@ input[type="number"] {
   display: none;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 720px) {
   .hide-small {
     display: none;
   }
 
   .player-stats {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
   }
 

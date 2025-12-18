@@ -4,6 +4,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/carlmjohnson/versioninfo"
 	"github.com/martinohansen/hest/internal/db"
@@ -18,10 +19,15 @@ func main() {
 
 	app := newApp(store)
 
-	slog.Info("listening on http://localhost:8080",
+	port := "8080"
+	if portEnv := os.Getenv("HEST_PORT"); portEnv != "" {
+		port = portEnv
+	}
+
+	slog.Info("listening on http://localhost:"+port,
 		"version", versioninfo.Short(),
 	)
-	if err := http.ListenAndServe(":8080", app.routes()); err != nil {
+	if err := http.ListenAndServe(":"+port, app.routes()); err != nil {
 		log.Fatal(err)
 	}
 }
