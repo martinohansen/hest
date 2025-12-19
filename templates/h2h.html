@@ -125,6 +125,7 @@
     <table class="table">
       <thead>
         <tr>
+          <th class="rank hide-small" style="text-align: center">#</th>
           <th>Dato</th>
           <th class="nowrap">Vinder</th>
           <th class="nowrap">2. plads</th>
@@ -132,21 +133,22 @@
         </tr>
       </thead>
       <tbody>
-        {{range .Stats.SharedGamesList}}
+        {{range $index, $game := .Stats.SharedGamesList}}
         <tr>
-          <td>{{.PlayedAt.Format "2006-01-02"}}</td>
+          <td class="rank hide-small" style="text-align: center">{{subtract $.Stats.SharedGames $index}}</td>
+          <td>{{$game.PlayedAt.Format "2006-01-02"}}</td>
           <td class="nowrap">
-            <a href="/player?id={{.Winner.ID}}"
-              >{{.Winner.Emoji}} {{.Winner.Name}}</a
+            <a href="/player?id={{$game.Winner.ID}}"
+              >{{$game.Winner.Emoji}} {{$game.Winner.Name}}</a
             >
           </td>
           <td class="nowrap">
-            <a href="/player?id={{.Second.ID}}"
-              >{{.Second.Emoji}} {{.Second.Name}}</a
+            <a href="/player?id={{$game.Second.ID}}"
+              >{{$game.Second.Emoji}} {{$game.Second.Name}}</a
             >
           </td>
           <td class="hide-small">
-            {{range .Participants}}<a
+            {{range $game.Participants}}<a
               href="/player?id={{.ID}}"
               title="{{.Name}}"
               >{{.Emoji}}</a

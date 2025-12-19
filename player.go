@@ -18,6 +18,7 @@ type playerDetailView struct {
 	Games        []Game
 	HasGames     bool
 	TotalPlayers int
+	TotalGames   int
 	Rank         int
 }
 
@@ -43,6 +44,7 @@ func (p playerDetailView) withRankHistory(history []PlayerRankHistoryEntry) play
 
 func (p playerDetailView) withGames(games []Game) playerDetailView {
 	p.Games = games
+	p.TotalGames = len(games)
 	return p
 }
 

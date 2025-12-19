@@ -19,8 +19,9 @@ func render(tplName string, w http.ResponseWriter, data any, files ...string) er
 		files[i] = filepath.Clean(f)
 	}
 	funcs := template.FuncMap{
-		"add":     func(a, b int) int { return a + b },
-		"version": func() string { return versioninfo.Short() },
+		"add":      func(a, b int) int { return a + b },
+		"subtract": func(a, b int) int { return a - b },
+		"version":  func() string { return versioninfo.Short() },
 	}
 	tpl, err := template.New(filepath.Base(files[0])).Funcs(funcs).ParseFS(templateFS, files...)
 	if err != nil {

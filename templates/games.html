@@ -3,6 +3,7 @@
   <table class="table">
     <thead>
       <tr>
+        <th class="rank hide-small" style="text-align: center">#</th>
         <th>Dato</th>
         <th class="nowrap">Vinder</th>
         <th class="nowrap">2. plads</th>
@@ -10,28 +11,29 @@
       </tr>
     </thead>
     <tbody>
-      {{if .Games}} {{range .Games}}
+      {{if .Games}} {{range $index, $game := .Games}}
       <tr>
-        <td>{{.PlayedAt.Format "2006-01-02"}}</td>
+        <td class="rank hide-small" style="text-align: center">{{subtract $.TotalGames $index}}</td>
+        <td>{{$game.PlayedAt.Format "2006-01-02"}}</td>
         <td class="nowrap">
-          <a href="/player?id={{.Winner.ID}}"
-            >{{.Winner.Emoji}} {{.Winner.Name}}</a
+          <a href="/player?id={{$game.Winner.ID}}"
+            >{{$game.Winner.Emoji}} {{$game.Winner.Name}}</a
           >
         </td>
         <td class="nowrap">
-          <a href="/player?id={{.Second.ID}}"
-            >{{.Second.Emoji}} {{.Second.Name}}</a
+          <a href="/player?id={{$game.Second.ID}}"
+            >{{$game.Second.Emoji}} {{$game.Second.Name}}</a
           >
         </td>
         <td class="hide-small">
-          {{range .Participants}}<a href="/player?id={{.ID}}" title="{{.Name}}"
+          {{range $game.Participants}}<a href="/player?id={{.ID}}" title="{{.Name}}"
             >{{.Emoji}}</a
           >{{end}}
         </td>
       </tr>
       {{end}} {{else}}
       <tr>
-        <td colspan="3">Ingen spil registreret endnu.</td>
+        <td colspan="5">Ingen spil registreret endnu.</td>
       </tr>
       {{end}}
     </tbody>
