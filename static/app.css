@@ -357,8 +357,18 @@ input[type="number"] {
   align-items: center;
   margin-top: 24px;
   padding: 16px;
-  color: var(--bg);
+  color: var(--muted);
   font-size: 14px;
+}
+
+.footer a {
+  color: var(--muted);
+  padding: 0;
+}
+
+.footer a:hover {
+  color: var(--accent);
+  background: transparent;
 }
 
 .player-stats {
