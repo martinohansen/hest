@@ -67,7 +67,7 @@
   <tbody>
     {{range $index, $game := .Games}}
     <tr>
-      <td class="rank hide-small" style="text-align: center">{{subtract $.TotalGames $index}}</td>
+      <td class="rank hide-small" style="text-align: center">{{$game.ID}}</td>
       <td>{{$game.PlayedAt.Format "2006-01-02"}}</td>
       <td class="nowrap">
         <a href="/player?id={{$game.Winner.ID}}"
