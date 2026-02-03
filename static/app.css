@@ -79,8 +79,8 @@ abbr {
 }
 
 .season-filter select {
-  width: 55px;
-  max-width: 55px;
+  width: 100px;
+  max-width: 100px;
   padding: 2px 4px;
   font-size: 16px;
   line-height: 1.2;
@@ -394,8 +394,9 @@ input[type="number"] {
 
 .footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 8px;
   margin-top: 24px;
   padding: 16px;
   color: var(--muted);
@@ -410,6 +411,10 @@ input[type="number"] {
 .footer a:hover {
   color: var(--accent);
   background: transparent;
+}
+
+.footer-sep {
+  color: var(--muted);
 }
 
 .player-stats {

@@ -1,34 +1,87 @@
 {{define "content"}}
-<div class="rules-content">
-  {{.HTML}}
+<div>
+  <h1>Regler</h1>
+  <p>
+    Spillet starter sådan her: alle spillere stiller sig på række ved
+    straffekastlinjen. De to forreste spillere har hver en bold.
+  </p>
+  <ol>
+    <li>
+      <strong>Spiller 1 skyder først et straffekast.</strong>
+      <ol>
+        <li>Hvis Spiller 1 scorer: fint.</li>
+        <li>
+          Hvis Spiller 1 brænder: Spiller 1 skal selv hente returen og score
+          hurtigst muligt (fra hvor som helst: layup, hopskud osv.).
+        </li>
+      </ol>
+    </li>
+    <li>
+      <strong
+        >Spiller 2 må først skyde, når Spiller 1 har skudt sit første
+        straffekast.</strong
+      >
+      <ol>
+        <li>Spiller 2 prøver at score <strong>før</strong> Spiller 1.</li>
+        <li>
+          Hvis Spiller 2 brænder straffekastet: Spiller 2 henter selv returen og
+          prøver at score hurtigst muligt.
+        </li>
+      </ol>
+    </li>
+    <li>
+      <strong>Hvem får et bogstav?</strong>
+      <ol>
+        <li>
+          Hvis Spiller 2 scorer først (dvs. overhaler Spiller 1), får Spiller 1
+          et bogstav.
+        </li>
+        <li>Bogstaverne gives i rækkefølgen: <strong>H-E-S-T</strong>.</li>
+        <li>
+          Når en spiller har fået alle fire bogstaver (H, E, S, T), er spilleren
+          <strong>ude</strong> og stiller sig til siden.
+        </li>
+        <li>
+          Hvis Spiller 1 scorer først, går Spiller 1 bagerst i køen uden at få
+          et bogstav.
+        </li>
+      </ol>
+    </li>
+    <li>
+      <strong>Når Spiller 1 scorer</strong>, afleverer Spiller 1 bolden til den
+      næste i køen.
+      <ol>
+        <li>
+          Den nye spiller prøver nu at score <strong>før</strong> Spiller 2.
+        </li>
+        <li>
+          Hvis den nye spiller scorer først:
+          <strong>Spiller 2 får et bogstav.</strong>
+        </li>
+        <li>
+          Hvis Spiller 2 scorer først: Spiller 2 går bagerst i køen og afleverer
+          sin bold til den næste spiller (så der igen er to bolde i spil).
+        </li>
+      </ol>
+    </li>
+    <li>
+      <strong>Spillet fortsætter</strong>, indtil der kun er
+      <strong>to spillere tilbage.</strong>
+      <ol>
+        <li>
+          Når der er to tilbage, spiller de <strong>sudden death</strong>: de
+          skiftes til at skyde straffekast.
+        </li>
+        <li>
+          Den <strong>første der scorer</strong>, mens den anden brænder,
+          <strong>vinder finalen.</strong>
+        </li>
+        <li>
+          Der er <strong>3 point til vinderen</strong> og
+          <strong>1 point til den anden finalist</strong> i en runde.
+        </li>
+      </ol>
+    </li>
+  </ol>
 </div>
-
-<style>
-.rules-content {
-  line-height: 1.6;
-}
-
-.rules-content h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
-}
-
-.rules-content ol {
-  margin: 1rem 0;
-  padding-left: 2rem;
-}
-
-.rules-content ol ol {
-  margin: 0.5rem 0;
-}
-
-.rules-content li {
-  margin: 0.5rem 0;
-}
-
-.rules-content strong {
-  font-weight: 600;
-}
-</style>
 {{end}}
