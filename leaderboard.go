@@ -16,6 +16,7 @@ type leaderboardForm struct {
 	Players []PlayerWithRank
 	SortBy  string
 	SortDir string
+	seasonContext
 }
 
 func newLeaderboardForm() *leaderboardForm {
@@ -84,13 +85,20 @@ func (a *App) handleLeaderboard(w http.ResponseWriter, r *http.Request) {
 	sortBy := r.URL.Query().Get("sort")
 	sortDir := r.URL.Query().Get("dir")
 
-	players, err := a.Leaderboard()
+	ctx, selectedSeason, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "loading seasons", http.StatusInternalServerError)
+		return
+	}
+
+	players, err := a.Leaderboard(seasonFilter(selectedSeason))
 	if err != nil {
 		http.Error(w, "loading leaderboard", http.StatusInternalServerError)
 		return
 	}
 
 	form := newLeaderboardForm().withPlayers(players).withSort(sortBy, sortDir)
+	form.seasonContext = ctx
 
 	// If HTMX request, return only the table partial
 	if r.Header.Get("HX-Request") == "true" {

@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,15 +19,17 @@ type gameForm struct {
 	Success  string
 	WinnerID int
 	SecondID int
+	seasonContext
 }
 
-func newGameForm(players []Player) gameForm {
+func newGameForm(players []Player, ctx seasonContext) gameForm {
 	form := gameForm{
 		Path:     "/new",
 		Title:    "Tilføj kamp",
 		Players:  players,
 		PlayedAt: time.Now().Format(dateLayout),
 	}
+	form.seasonContext = ctx
 	return form
 }
 
@@ -73,7 +76,7 @@ func (a *App) handleAddPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	players, err := a.Leaderboard()
+	players, err := a.ListPlayers()
 	if err != nil {
 		http.Error(w, "failed to reload players", http.StatusInternalServerError)
 		return
@@ -83,6 +86,12 @@ func (a *App) handleAddPlayer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleNewGame(w http.ResponseWriter, r *http.Request) {
+	ctx, _, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "failed to load seasons", http.StatusInternalServerError)
+		return
+	}
+
 	players, err := a.ListPlayers()
 	if err != nil {
 		http.Error(w, "failed to load players", http.StatusInternalServerError)
@@ -90,7 +99,7 @@ func (a *App) handleNewGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	partial := r.URL.Query().Get("partial") == "1"
-	a.renderSelection(w, partial, newGameForm(players))
+	a.renderSelection(w, partial, newGameForm(players, ctx))
 }
 
 func (a *App) handleScoreGame(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +112,12 @@ func (a *App) handleScoreGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, _, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "failed to load seasons", http.StatusInternalServerError)
+		return
+	}
+
 	ids, err := parseIDs(r.Form["player_id"])
 	if err != nil {
 		http.Error(w, "bad player selection", http.StatusBadRequest)
@@ -110,12 +125,12 @@ func (a *App) handleScoreGame(w http.ResponseWriter, r *http.Request) {
 	}
 	uniqueIDs := db.Dedupe(ids)
 	if len(uniqueIDs) < 2 {
-		players, listErr := a.Leaderboard()
+		players, listErr := a.ListPlayers()
 		if listErr != nil {
 			http.Error(w, "pick at least two players", http.StatusBadRequest)
 			return
 		}
-		a.renderSelection(w, true, newGameForm(players).withError("Pick at least two players."))
+		a.renderSelection(w, true, newGameForm(players, ctx).withError("Pick at least two players."))
 		return
 	}
 
@@ -129,91 +144,112 @@ func (a *App) handleScoreGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.renderScoring(w, r, newGameForm(players))
+	a.renderScoring(w, r, newGameForm(players, ctx))
 }
 
 func (a *App) handleSaveGame(w http.ResponseWriter, r *http.Request) {
-	_, ok := a.saveGameCommon(w, r)
+	_, playedAt, ok := a.saveGameCommon(w, r)
 	if !ok {
 		return
 	}
 
-	if r.Header.Get("HX-Request") != "" {
-		w.Header().Set("HX-Redirect", "/")
+	redirectPath := "/?season=0"
+	seasonID, err := a.seasonIDForDate(playedAt)
+	if err != nil {
+		http.Error(w, "failed to resolve season", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	if seasonID > 0 {
+		redirectPath = "/?season=" + strconv.Itoa(seasonID)
+	}
+
+	if r.Header.Get("HX-Request") != "" {
+		w.Header().Set("HX-Redirect", redirectPath)
+		return
+	}
+	http.Redirect(w, r, redirectPath, http.StatusSeeOther)
 }
 
 func (a *App) handleSaveAndNewGame(w http.ResponseWriter, r *http.Request) {
-	players, ok := a.saveGameCommon(w, r)
+	players, _, ok := a.saveGameCommon(w, r)
 	if !ok {
 		return
 	}
 
 	// Reset the form with the same players for a new game
-	a.renderScoring(w, r, newGameForm(players).withSuccess("Kamp tilføjet"))
+	ctx, _, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "failed to load seasons", http.StatusInternalServerError)
+		return
+	}
+	a.renderScoring(w, r, newGameForm(players, ctx).withSuccess("Kamp tilføjet"))
 }
 
-func (a *App) saveGameCommon(w http.ResponseWriter, r *http.Request) ([]Player, bool) {
+func (a *App) saveGameCommon(w http.ResponseWriter, r *http.Request) ([]Player, time.Time, bool) {
 	username, ok := ensureAuthAndForm(w, r)
 	if !ok {
-		return nil, false
+		return nil, time.Time{}, false
+	}
+
+	ctx, _, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "failed to load seasons", http.StatusInternalServerError)
+		return nil, time.Time{}, false
 	}
 
 	ids, err := parseIDs(r.Form["player_id"])
 	if err != nil {
 		http.Error(w, "bad player selection", http.StatusBadRequest)
-		return nil, false
+		return nil, time.Time{}, false
 	}
 
 	uniqueIDs := db.Dedupe(ids)
 	if len(uniqueIDs) < 2 {
 		http.Error(w, "pick at least two players", http.StatusBadRequest)
-		return nil, false
+		return nil, time.Time{}, false
 	}
 
 	players, err := a.playersByIDs(uniqueIDs)
 	if err != nil {
 		http.Error(w, "failed to load players", http.StatusInternalServerError)
-		return nil, false
+		return nil, time.Time{}, false
 	}
 	if len(players) < len(uniqueIDs) {
 		http.Error(w, "unknown player selected", http.StatusBadRequest)
-		return nil, false
+		return nil, time.Time{}, false
 	}
 
-	form := newGameForm(players).withDate(r.FormValue("played_at"))
+	form := newGameForm(players, ctx).withDate(r.FormValue("played_at"))
 
 	winnerID, err := parsePlayer(r.FormValue("winner_id"))
 	if err != nil {
 		a.renderScoring(w, r, form.withError("Pick a winner."))
-		return nil, false
+		return nil, time.Time{}, false
 	}
 	secondID, err := parsePlayer(r.FormValue("second_id"))
 	if err != nil {
 		a.renderScoring(w, r, form.withSelection(winnerID, secondID).withError("a 2nd place."))
-		return nil, false
+		return nil, time.Time{}, false
 	}
 
 	form = form.withSelection(winnerID, secondID)
 	if msg := validatePlacement(winnerID, secondID, uniqueIDs); msg != "" {
 		a.renderScoring(w, r, form.withError(msg))
-		return nil, false
+		return nil, time.Time{}, false
 	}
 
 	playedAt, msg := parsePlayedAt(form.PlayedAt)
 	if msg != "" {
 		a.renderScoring(w, r, form.withError(msg))
-		return nil, false
+		return nil, time.Time{}, false
 	}
 
 	if err := a.store.AddGame(playedAt, uniqueIDs, winnerID, secondID, username); err != nil {
 		http.Error(w, "db error", http.StatusInternalServerError)
-		return nil, false
+		return nil, time.Time{}, false
 	}
 
-	return players, true
+	return players, playedAt, true
 }
 
 func (a *App) renderSelection(w http.ResponseWriter, partial bool, form gameForm) {

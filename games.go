@@ -9,6 +9,7 @@ type gamesView struct {
 	Title      string
 	Games      []Game
 	TotalGames int
+	seasonContext
 }
 
 func newGameView() gamesView {
@@ -30,12 +31,19 @@ func (a *App) handleGames(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	games, err := a.listGames()
+	ctx, selectedSeason, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "failed to load seasons", http.StatusInternalServerError)
+		return
+	}
+
+	games, err := a.listGames(seasonFilter(selectedSeason))
 	if err != nil {
 		http.Error(w, "failed to load games", http.StatusInternalServerError)
 		return
 	}
 
 	page := newGameView().withGames(games)
+	page.seasonContext = ctx
 	renderTemplate(w, "layout", page, "templates/layout.html", "templates/games.html")
 }

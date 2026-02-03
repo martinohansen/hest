@@ -57,8 +57,12 @@ abbr {
   box-shadow: 0 8px 20px rgba(17, 24, 39, 0.05);
 }
 
-.nav .push {
+.nav-right {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .nav a {
@@ -67,6 +71,30 @@ abbr {
 
 .nav a.active {
   text-decoration: underline;
+}
+
+.season-filter {
+  display: flex;
+  align-items: center;
+}
+
+.season-filter select {
+  width: 55px;
+  max-width: 55px;
+  padding: 2px 4px;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .card {
@@ -351,6 +379,19 @@ input[type="number"] {
   border-radius: 8px;
 }
 
+.season-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.season-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.4fr) repeat(2, minmax(140px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -422,6 +463,14 @@ input[type="number"] {
 
   .responsive-label .label-short {
     display: inline;
+  }
+
+  .season-filter {
+    display: none;
+  }
+
+  .season-row {
+    grid-template-columns: 1fr;
   }
 }
 

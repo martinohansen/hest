@@ -15,6 +15,7 @@ type h2hView struct {
 	Player2ID   int
 	Stats       *db.H2HStats
 	ShowResults bool
+	seasonContext
 }
 
 func newH2HView() *h2hView {
@@ -42,6 +43,12 @@ func (h h2hView) withStats(stats db.H2HStats) h2hView {
 }
 
 func (a *App) handleH2H(w http.ResponseWriter, r *http.Request) {
+	ctx, selectedSeason, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "loading seasons", http.StatusInternalServerError)
+		return
+	}
+
 	players, err := a.store.ListPlayersByName()
 	if err != nil {
 		http.Error(w, "loading players", http.StatusInternalServerError)
@@ -49,6 +56,7 @@ func (a *App) handleH2H(w http.ResponseWriter, r *http.Request) {
 	}
 
 	view := newH2HView().withPlayers(players)
+	view.seasonContext = ctx
 
 	player1IDStr := r.URL.Query().Get("player1")
 	player2IDStr := r.URL.Query().Get("player2")
@@ -58,7 +66,7 @@ func (a *App) handleH2H(w http.ResponseWriter, r *http.Request) {
 		player2ID, err2 := strconv.Atoi(player2IDStr)
 
 		if err1 == nil && err2 == nil && player1ID != player2ID {
-			stats, err := a.store.GetH2HStats(player1ID, player2ID)
+			stats, err := a.store.GetH2HStats(player1ID, player2ID, seasonFilter(selectedSeason))
 			if err == nil {
 				view = view.withSelection(player1ID, player2ID).withStats(stats)
 			}

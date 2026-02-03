@@ -44,6 +44,7 @@ type rulesView struct {
 	Path  string
 	Title string
 	HTML  template.HTML
+	seasonContext
 }
 
 func newRulesView() rulesView {
@@ -72,6 +73,13 @@ func (a *App) handleRules(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, _, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "loading seasons", http.StatusInternalServerError)
+		return
+	}
+
 	view := newRulesView()
+	view.seasonContext = ctx
 	renderTemplate(w, "layout", view, "templates/layout.html", "templates/rules.html")
 }

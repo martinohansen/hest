@@ -32,6 +32,7 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("/games", a.handleGames)
 	mux.HandleFunc("/games/save", a.handleSaveGame)
 	mux.HandleFunc("/games/save-and-new", a.handleSaveAndNewGame)
+	mux.HandleFunc("/seasons", a.handleSeasons)
 	mux.HandleFunc("/new", a.handleNewGame)
 	mux.HandleFunc("/new/score", a.handleScoreGame)
 	mux.HandleFunc("/players", a.handleAddPlayer)
@@ -41,8 +42,8 @@ func (a *App) routes() http.Handler {
 	return mux
 }
 
-func (a *App) Leaderboard() ([]Player, error) {
-	players, err := a.store.ListPlayersByPoints()
+func (a *App) Leaderboard(filter *db.DateRange) ([]Player, error) {
+	players, err := a.store.ListPlayersByPoints(filter)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +68,8 @@ func (a *App) ListPlayers() ([]Player, error) {
 	return result, nil
 }
 
-func (a *App) listGames() ([]Game, error) {
-	games, err := a.store.ListGames()
+func (a *App) listGames(filter *db.DateRange) ([]Game, error) {
+	games, err := a.store.ListGames(filter)
 	if err != nil {
 		return nil, err
 	}

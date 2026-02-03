@@ -12,6 +12,9 @@
     hx-swap="innerHTML"
     class="stack"
   >
+    {{if .SeasonExplicit}}
+    <input type="hidden" name="season" value="{{.SeasonID}}" />
+    {{end}}
     <div class="stack">
       <p>Vælg deltagere:</p>
       {{template "player_list" .}}
@@ -52,6 +55,9 @@
     <p class="error">{{.Error}}</p>
     {{end}} {{if .Success}}
     <p class="success">{{.Success}}</p>
+    {{end}}
+    {{if .SeasonExplicit}}
+    <input type="hidden" name="season" value="{{.SeasonID}}" />
     {{end}}
     <label class="stack">
       <span>Dato</span>

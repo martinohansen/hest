@@ -20,6 +20,7 @@ type playerDetailView struct {
 	TotalPlayers int
 	TotalGames   int
 	Rank         int
+	seasonContext
 }
 
 func newPlayerDetailView(player Player, rank int) playerDetailView {
@@ -59,6 +60,12 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, selectedSeason, err := a.loadSeasonContext(r)
+	if err != nil {
+		http.Error(w, "failed to load seasons", http.StatusInternalServerError)
+		return
+	}
+
 	playerIDStr := r.URL.Query().Get("id")
 	if playerIDStr == "" {
 		http.Error(w, "player id required", http.StatusBadRequest)
@@ -71,7 +78,8 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	players, err := a.Leaderboard()
+	filter := seasonFilter(selectedSeason)
+	players, err := a.Leaderboard(filter)
 	if err != nil {
 		http.Error(w, "failed to load players", http.StatusInternalServerError)
 		return
@@ -89,11 +97,19 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if player == (Player{}) {
-		http.Error(w, "player not found", http.StatusNotFound)
-		return
+		playerDB, ok, err := a.store.PlayerTotalsByID(playerID, filter)
+		if err != nil {
+			http.Error(w, "failed to load player", http.StatusInternalServerError)
+			return
+		}
+		if !ok {
+			http.Error(w, "player not found", http.StatusNotFound)
+			return
+		}
+		player = Player(playerDB)
 	}
 
-	historyDB, err := a.store.PlayerGameHistory(playerID)
+	historyDB, err := a.store.PlayerGameHistory(playerID, filter)
 	if err != nil {
 		http.Error(w, "failed to load player history", http.StatusInternalServerError)
 		return
@@ -104,7 +120,7 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		history[i] = PlayerGameHistoryEntry(h)
 	}
 
-	rankHistoryDB, err := a.store.PlayerRankHistory(playerID)
+	rankHistoryDB, err := a.store.PlayerRankHistory(playerID, filter)
 	if err != nil {
 		http.Error(w, "failed to load player rank history", http.StatusInternalServerError)
 		return
@@ -115,7 +131,7 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		rankHistory[i] = PlayerRankHistoryEntry(h)
 	}
 
-	gamesDB, err := a.store.PlayerGames(playerID)
+	gamesDB, err := a.store.PlayerGames(playerID, filter)
 	if err != nil {
 		http.Error(w, "failed to load player games", http.StatusInternalServerError)
 		return
@@ -131,6 +147,7 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		withRankHistory(rankHistory).
 		withGames(games).
 		withTotalPlayers(len(players))
+	view.seasonContext = ctx
 
 	renderTemplate(w, "layout", view, "templates/layout.html", "templates/player.html")
 }

@@ -1,0 +1,31 @@
+{{define "content"}}
+<h1>Sæsoner</h1>
+
+{{if .Error}}
+<p class="error">{{.Error}}</p>
+{{end}}
+{{if .Success}}
+<p class="success">{{.Success}}</p>
+{{end}}
+
+<form method="post" class="season-list">
+  {{range .Seasons}}
+  <div class="season-row">
+    <input type="hidden" name="id" value="{{.ID}}" />
+    <input type="text" name="name_{{.ID}}" value="{{.Name}}" placeholder="Navn" aria-label="Navn" required />
+    <input type="date" name="start_date_{{.ID}}" value="{{.StartDate}}" aria-label="Start" required />
+    <input type="date" name="end_date_{{.ID}}" value="{{.EndDate}}" aria-label="Slut" />
+  </div>
+  {{end}}
+
+  <div class="season-row">
+    <input type="text" name="name_new" placeholder="Navn" aria-label="Navn" />
+    <input type="date" name="start_date_new" aria-label="Start" />
+    <input type="date" name="end_date_new" aria-label="Slut" />
+  </div>
+
+  <div class="actions">
+    <button type="submit">Gem</button>
+  </div>
+</form>
+{{end}}

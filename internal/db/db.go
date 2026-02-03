@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -87,6 +88,49 @@ CREATE TABLE IF NOT EXISTS players (
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS seasons (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
+	start_date TEXT NOT NULL,
+	end_date TEXT,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	CHECK (end_date IS NULL OR start_date <= end_date)
+);
+
+CREATE INDEX IF NOT EXISTS seasons_date_idx
+	ON seasons (start_date, end_date);
+
+CREATE TRIGGER IF NOT EXISTS seasons_no_overlap_insert
+BEFORE INSERT ON seasons
+BEGIN
+	SELECT
+		CASE
+			WHEN EXISTS (
+				SELECT 1
+				FROM seasons s
+				WHERE s.start_date <= COALESCE(NEW.end_date, '9999-12-31')
+					AND (s.end_date IS NULL OR s.end_date >= NEW.start_date)
+			)
+			THEN RAISE(ABORT, 'season overlaps existing season')
+		END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS seasons_no_overlap_update
+BEFORE UPDATE ON seasons
+BEGIN
+	SELECT
+		CASE
+			WHEN EXISTS (
+				SELECT 1
+				FROM seasons s
+				WHERE s.id != NEW.id
+					AND s.start_date <= COALESCE(NEW.end_date, '9999-12-31')
+					AND (s.end_date IS NULL OR s.end_date >= NEW.start_date)
+			)
+			THEN RAISE(ABORT, 'season overlaps existing season')
+		END;
+END;
+
 CREATE TABLE IF NOT EXISTS games (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	played_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -124,6 +168,34 @@ func buildPlaceholders(ids []int) (string, []any) {
 	return strings.Join(placeholders, ","), args
 }
 
+func dateRangeWhere(column string, filter *DateRange) (string, []any) {
+	start, end, ok := normalizedDateRange(filter)
+	if !ok {
+		return "", nil
+	}
+	return fmt.Sprintf("WHERE date(%s) BETWEEN ? AND ?", column), []any{start, end}
+}
+
+func dateRangeAnd(column string, filter *DateRange) (string, []any) {
+	start, end, ok := normalizedDateRange(filter)
+	if !ok {
+		return "", nil
+	}
+	return fmt.Sprintf(" AND date(%s) BETWEEN ? AND ?", column), []any{start, end}
+}
+
+func normalizedDateRange(filter *DateRange) (string, string, bool) {
+	if filter == nil || !filter.Valid() {
+		return "", "", false
+	}
+	start := strings.TrimSpace(filter.StartDate)
+	end := strings.TrimSpace(filter.EndDate)
+	if end == "" {
+		end = "9999-12-31"
+	}
+	return start, end, true
+}
+
 // scanPlayer scans a player row from the playerTotalsQuery result.
 func scanPlayer(scanner interface{ Scan(...any) error }) (Player, error) {
 	var p Player
@@ -136,8 +208,9 @@ func (s *Store) AddPlayer(name string) error {
 	return err
 }
 
-func (s *Store) ListGames() ([]Game, error) {
-	rows, err := s.db.Query(`
+func (s *Store) ListGames(filter *DateRange) ([]Game, error) {
+	whereClause, args := dateRangeWhere("g.played_at", filter)
+	query := `
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
@@ -145,8 +218,13 @@ SELECT g.id, g.played_at,
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
-ORDER BY g.played_at DESC, g.id DESC
-`)
+`
+	if whereClause != "" {
+		query += whereClause + "\n"
+	}
+	query += "ORDER BY g.played_at DESC, g.id DESC\n"
+
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -221,8 +299,9 @@ ORDER BY gp.game_id, p.name
 	return participantMap, rows.Err()
 }
 
-func (s *Store) PlayerGameHistory(playerID int) ([]PlayerGameHistoryEntry, error) {
-	rows, err := s.db.Query(`
+func (s *Store) PlayerGameHistory(playerID int, filter *DateRange) ([]PlayerGameHistoryEntry, error) {
+	andClause, dateArgs := dateRangeAnd("g.played_at", filter)
+	query := `
 WITH player_games AS (
 	SELECT
 		g.id,
@@ -234,7 +313,7 @@ WITH player_games AS (
 		END as points_earned
 	FROM games g
 	JOIN game_players gp ON g.id = gp.game_id
-	WHERE gp.player_id = ?
+	WHERE gp.player_id = ?` + andClause + `
 	ORDER BY g.played_at ASC, g.id ASC
 )
 SELECT
@@ -246,7 +325,11 @@ SELECT
 		ROW_NUMBER() OVER (ORDER BY played_at, id) as ppg
 FROM player_games
 ORDER BY played_at ASC, id ASC
-`, playerID, playerID, playerID)
+`
+	args := []any{playerID, playerID, playerID}
+	args = append(args, dateArgs...)
+
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -263,8 +346,9 @@ ORDER BY played_at ASC, id ASC
 	return history, rows.Err()
 }
 
-func (s *Store) PlayerRankHistory(playerID int) ([]PlayerRankHistoryEntry, error) {
-	rows, err := s.db.Query(`
+func (s *Store) PlayerRankHistory(playerID int, filter *DateRange) ([]PlayerRankHistoryEntry, error) {
+	if filter == nil || !filter.Valid() {
+		rows, err := s.db.Query(`
 WITH player_first_game AS (
 	-- Find the player's first game
 	SELECT MIN(g.played_at) as first_game_date
@@ -316,7 +400,94 @@ FROM ranked_leaderboard
 WHERE player_id = ?
 ORDER BY played_at ASC
 `, playerID, playerID)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
 
+		var history []PlayerRankHistoryEntry
+		for rows.Next() {
+			var entry PlayerRankHistoryEntry
+			if err := rows.Scan(&entry.PlayedAt, &entry.Rank); err != nil {
+				return nil, err
+			}
+			history = append(history, entry)
+		}
+		return history, rows.Err()
+	}
+
+	start, end, ok := normalizedDateRange(filter)
+	if !ok {
+		return nil, nil
+	}
+
+	query := `
+WITH player_first_game AS (
+	-- Find the player's first game in season
+	SELECT MIN(g.played_at) as first_game_date
+	FROM games g
+	JOIN game_players gp ON g.id = gp.game_id
+	WHERE gp.player_id = ?
+		AND date(g.played_at) BETWEEN ? AND ?
+),
+player_games AS (
+	-- Get ALL games from the player's first game onward (season only)
+	SELECT g.id, g.played_at
+	FROM games g
+	CROSS JOIN player_first_game pfg
+	WHERE g.played_at >= pfg.first_game_date
+		AND date(g.played_at) BETWEEN ? AND ?
+	ORDER BY g.played_at ASC, g.id ASC
+),
+leaderboard_snapshots AS (
+	-- For each game, calculate ALL players' stats up to that point
+	SELECT
+		pg.played_at,
+		pg.id as game_id,
+		p.id as player_id,
+		COUNT(DISTINCT g_hist.id) as games,
+		COUNT(DISTINCT CASE WHEN g_hist.winner_id = p.id THEN g_hist.id END) as wins,
+		COUNT(DISTINCT CASE WHEN g_hist.second_id = p.id THEN g_hist.id END) as seconds,
+		(COUNT(DISTINCT CASE WHEN g_hist.winner_id = p.id THEN g_hist.id END) * 3 +
+		COUNT(DISTINCT CASE WHEN g_hist.second_id = p.id THEN g_hist.id END)) as points
+	FROM player_games pg
+	CROSS JOIN players p
+	LEFT JOIN game_players gp_hist ON gp_hist.player_id = p.id
+	LEFT JOIN games g_hist ON g_hist.id = gp_hist.game_id
+		AND (g_hist.played_at < pg.played_at
+			OR (g_hist.played_at = pg.played_at AND g_hist.id <= pg.id)
+		)
+		AND date(g_hist.played_at) BETWEEN ? AND ?
+	GROUP BY pg.played_at, pg.id, p.id
+),
+ranked_leaderboard AS (
+	-- Apply ranking with proper tiebreakers
+	SELECT
+		played_at,
+		player_id,
+		ROW_NUMBER() OVER (
+			PARTITION BY played_at, game_id
+			ORDER BY points DESC, wins DESC, seconds DESC, games DESC, player_id ASC
+		) as rank
+	FROM leaderboard_snapshots
+)
+SELECT played_at, rank
+FROM ranked_leaderboard
+WHERE player_id = ?
+ORDER BY played_at ASC
+`
+	args := []any{
+		playerID,
+		start,
+		end,
+		start,
+		end,
+		start,
+		end,
+		playerID,
+	}
+
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -333,8 +504,9 @@ ORDER BY played_at ASC
 	return history, rows.Err()
 }
 
-func (s *Store) PlayerGames(playerID int) ([]Game, error) {
-	rows, err := s.db.Query(`
+func (s *Store) PlayerGames(playerID int, filter *DateRange) ([]Game, error) {
+	andClause, dateArgs := dateRangeAnd("g.played_at", filter)
+	query := `
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
@@ -343,9 +515,13 @@ FROM games g
 JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
 JOIN game_players gp ON g.id = gp.game_id
-WHERE gp.player_id = ?
+WHERE gp.player_id = ?` + andClause + `
 ORDER BY g.played_at DESC, g.id DESC
-`, playerID)
+`
+	args := []any{playerID}
+	args = append(args, dateArgs...)
+
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +567,8 @@ ORDER BY g.played_at DESC, g.id DESC
 }
 
 func (s *Store) ListPlayersByName() ([]Player, error) {
-	rows, err := s.db.Query(playerTotalsQuery("", `ORDER BY name ASC`))
+	query, args := playerTotalsQuery("", `ORDER BY name ASC`, nil)
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -410,10 +587,11 @@ func (s *Store) ListPlayersByName() ([]Player, error) {
 
 // ListPlayersByPoints returns all players ordered by their points with
 // tiebreakers, in order of wins, seconds, games played, and lastly name.
-func (s *Store) ListPlayersByPoints() ([]Player, error) {
-	rows, err := s.db.Query(playerTotalsQuery("", `
+func (s *Store) ListPlayersByPoints(filter *DateRange) ([]Player, error) {
+	query, args := playerTotalsQuery("", `
 ORDER BY points DESC, wins DESC, seconds DESC, games DESC, name ASC
-`))
+`, filter)
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -430,13 +608,29 @@ ORDER BY points DESC, wins DESC, seconds DESC, games DESC, name ASC
 	return players, rows.Err()
 }
 
+func (s *Store) PlayerTotalsByID(id int, filter *DateRange) (Player, bool, error) {
+	query, args := playerTotalsQuery("WHERE p.id = ?", "", filter)
+	args = append(args, id)
+
+	row := s.db.QueryRow(query, args...)
+	player, err := scanPlayer(row)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Player{}, false, nil
+		}
+		return Player{}, false, err
+	}
+	return player, true, nil
+}
+
 func (s *Store) PlayersByIDs(ids []int) ([]Player, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
 	placeholders, args := buildPlaceholders(ids)
-	query := playerTotalsQuery(fmt.Sprintf("WHERE p.id IN (%s)", placeholders), "")
+	query, seasonArgs := playerTotalsQuery(fmt.Sprintf("WHERE p.id IN (%s)", placeholders), "", nil)
 
+	args = append(seasonArgs, args...)
 	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -541,7 +735,7 @@ func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, seco
 }
 
 // GetH2HStats returns head-to-head statistics for two players, including only games where both participated.
-func (s *Store) GetH2HStats(player1ID, player2ID int) (H2HStats, error) {
+func (s *Store) GetH2HStats(player1ID, player2ID int, filter *DateRange) (H2HStats, error) {
 	var stats H2HStats
 
 	// Get base player info
@@ -556,7 +750,8 @@ func (s *Store) GetH2HStats(player1ID, player2ID int) (H2HStats, error) {
 	stats.Player2 = players[1]
 
 	// Get games where both players participated
-	rows, err := s.db.Query(`
+	whereClause, dateArgs := dateRangeWhere("g.played_at", filter)
+	query := `
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
@@ -566,8 +761,16 @@ JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
 JOIN game_players gp1 ON g.id = gp1.game_id AND gp1.player_id = ?
 JOIN game_players gp2 ON g.id = gp2.game_id AND gp2.player_id = ?
-ORDER BY g.played_at DESC, g.id DESC
-`, player1ID, player2ID)
+`
+	if whereClause != "" {
+		query += whereClause + "\n"
+	}
+	query += `ORDER BY g.played_at DESC, g.id DESC
+`
+	args := []any{player1ID, player2ID}
+	args = append(args, dateArgs...)
+
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return stats, err
 	}
@@ -672,23 +875,53 @@ ORDER BY g.played_at DESC, g.id DESC
 // The where parameter should include the WHERE keyword if needed (e.g., "WHERE p.id IN (...)").
 // The order parameter should include the ORDER BY keyword if needed.
 // Scoring: 3 points per win, 1 point per second place.
-func playerTotalsQuery(where, order string) string {
+func playerTotalsQuery(where, order string, filter *DateRange) (string, []any) {
 	var b strings.Builder
+	var args []any
+	seasonClause := ""
+	seasonArgs := []any{}
+	if start, end, ok := normalizedDateRange(filter); ok {
+		seasonClause = "WHERE date(g.played_at) BETWEEN ? AND ?"
+		seasonArgs = []any{start, end}
+	}
+
 	b.WriteString(`
 WITH games_count AS (
     SELECT player_id, COUNT(*) AS games
     FROM game_players
-    GROUP BY player_id
+    JOIN games g ON g.id = game_players.game_id
+`)
+	if seasonClause != "" {
+		b.WriteString("    ")
+		b.WriteString(seasonClause)
+		b.WriteString("\n")
+		args = append(args, seasonArgs...)
+	}
+	b.WriteString(`    GROUP BY player_id
 ),
 wins_count AS (
     SELECT winner_id AS player_id, COUNT(*) AS wins
-    FROM games
-    GROUP BY winner_id
+    FROM games g
+`)
+	if seasonClause != "" {
+		b.WriteString("    ")
+		b.WriteString(seasonClause)
+		b.WriteString("\n")
+		args = append(args, seasonArgs...)
+	}
+	b.WriteString(`    GROUP BY winner_id
 ),
 seconds_count AS (
     SELECT second_id AS player_id, COUNT(*) AS seconds
-    FROM games
-    GROUP BY second_id
+    FROM games g
+`)
+	if seasonClause != "" {
+		b.WriteString("    ")
+		b.WriteString(seasonClause)
+		b.WriteString("\n")
+		args = append(args, seasonArgs...)
+	}
+	b.WriteString(`    GROUP BY second_id
 )
 SELECT p.id, p.name,
 	COALESCE(p.emoji, '') AS emoji,
@@ -715,5 +948,5 @@ LEFT JOIN seconds_count s ON s.player_id = p.id`)
 	}
 	b.WriteString(";")
 
-	return b.String()
+	return b.String(), args
 }

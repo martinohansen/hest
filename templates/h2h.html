@@ -8,6 +8,9 @@
     hx-push-url="true"
     class="stack"
   >
+    {{if .SeasonExplicit}}
+    <input type="hidden" name="season" value="{{.SeasonID}}" />
+    {{end}}
     <div class="h2h-selects">
       <label class="stack">
         <span>Spiller 1</span>
@@ -45,7 +48,7 @@
         <h1 class="h2h-name h2h-name--right">
           <a
             class="h2h-name-link"
-            href="/player?id={{.Stats.Player1.ID}}"
+            href="/player?id={{.Stats.Player1.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
             aria-label="{{.Stats.Player1.Name}} {{.Stats.Player1.Emoji}}"
             title="{{.Stats.Player1.Name}} {{.Stats.Player1.Emoji}}"
           >
@@ -86,7 +89,7 @@
         <h1 class="h2h-name h2h-name--left">
           <a
             class="h2h-name-link"
-            href="/player?id={{.Stats.Player2.ID}}"
+            href="/player?id={{.Stats.Player2.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
             aria-label="{{.Stats.Player2.Emoji}} {{.Stats.Player2.Name}}"
             title="{{.Stats.Player2.Emoji}} {{.Stats.Player2.Name}}"
           >
@@ -138,18 +141,18 @@
           <td class="rank hide-small" style="text-align: center">{{subtract $.Stats.SharedGames $index}}</td>
           <td>{{$game.PlayedAt.Format "2006-01-02"}}</td>
           <td class="nowrap">
-            <a href="/player?id={{$game.Winner.ID}}"
+            <a href="/player?id={{$game.Winner.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
               >{{$game.Winner.Emoji}} {{$game.Winner.Name}}</a
             >
           </td>
           <td class="nowrap">
-            <a href="/player?id={{$game.Second.ID}}"
+            <a href="/player?id={{$game.Second.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
               >{{$game.Second.Emoji}} {{$game.Second.Name}}</a
             >
           </td>
           <td class="hide-small">
             {{range $game.Participants}}<a
-              href="/player?id={{.ID}}"
+              href="/player?id={{.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
               title="{{.Name}}"
               >{{.Emoji}}</a
             >{{end}}

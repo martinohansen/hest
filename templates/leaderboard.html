@@ -5,31 +5,31 @@
       <th class="rank"><abbr title="Placering">#</abbr></th>
       <th class="name"></th>
       <th class="num sortable"
-          hx-get="/?sort=games&dir={{if and (eq .SortBy "games") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-get="/?sort=games&dir={{if and (eq .SortBy "games") (eq .SortDir "desc")}}asc{{else}}desc{{end}}{{if .SeasonExplicit}}&season={{.SeasonID}}{{end}}"
           hx-target="#leaderboard"
           hx-swap="outerHTML">
         <abbr title="Kampe">K</abbr>{{if eq .SortBy "games"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
       </th>
       <th class="num sortable"
-          hx-get="/?sort=wins&dir={{if and (eq .SortBy "wins") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-get="/?sort=wins&dir={{if and (eq .SortBy "wins") (eq .SortDir "desc")}}asc{{else}}desc{{end}}{{if .SeasonExplicit}}&season={{.SeasonID}}{{end}}"
           hx-target="#leaderboard"
           hx-swap="outerHTML">
         <abbr title="Vundet">V</abbr>{{if eq .SortBy "wins"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
       </th>
       <th class="num sortable"
-          hx-get="/?sort=seconds&dir={{if and (eq .SortBy "seconds") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-get="/?sort=seconds&dir={{if and (eq .SortBy "seconds") (eq .SortDir "desc")}}asc{{else}}desc{{end}}{{if .SeasonExplicit}}&season={{.SeasonID}}{{end}}"
           hx-target="#leaderboard"
           hx-swap="outerHTML">
         <abbr title="2. plads">2</abbr>{{if eq .SortBy "seconds"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
       </th>
       <th class="num sortable"
-          hx-get="/?sort=points&dir={{if and (eq .SortBy "points") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-get="/?sort=points&dir={{if and (eq .SortBy "points") (eq .SortDir "desc")}}asc{{else}}desc{{end}}{{if .SeasonExplicit}}&season={{.SeasonID}}{{end}}"
           hx-target="#leaderboard"
           hx-swap="outerHTML">
         <abbr title="Point">P</abbr>{{if eq .SortBy "points"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
       </th>
       <th class="num sortable"
-          hx-get="/?sort=ppg&dir={{if and (eq .SortBy "ppg") (eq .SortDir "desc")}}asc{{else}}desc{{end}}"
+          hx-get="/?sort=ppg&dir={{if and (eq .SortBy "ppg") (eq .SortDir "desc")}}asc{{else}}desc{{end}}{{if .SeasonExplicit}}&season={{.SeasonID}}{{end}}"
           hx-target="#leaderboard"
           hx-swap="outerHTML">
         <abbr title="Point pr. kamp">PPK</abbr>{{if eq .SortBy "ppg"}}{{if eq .SortDir "desc"}} ▼{{else}} ▲{{end}}{{end}}
@@ -40,7 +40,7 @@
     {{if .Players}} {{range $p := .Players}}
     <tr>
       <td class="rank">{{$p.OriginalRank}}</td>
-      <td class="name"><a href="/player?id={{$p.ID}}">{{$p.Emoji}} {{$p.Name}}</a></td>
+      <td class="name"><a href="/player?id={{$p.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}">{{$p.Emoji}} {{$p.Name}}</a></td>
       <td class="num">{{$p.Games}}</td>
       <td class="num">{{$p.Wins}}</td>
       <td class="num">{{$p.Seconds}}</td>

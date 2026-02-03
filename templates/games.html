@@ -16,17 +16,17 @@
         <td class="rank hide-small" style="text-align: center">{{$game.ID}}</td>
         <td>{{$game.PlayedAt.Format "2006-01-02"}}</td>
         <td class="nowrap">
-          <a href="/player?id={{$game.Winner.ID}}"
+          <a href="/player?id={{$game.Winner.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
             >{{$game.Winner.Emoji}} {{$game.Winner.Name}}</a
           >
         </td>
         <td class="nowrap">
-          <a href="/player?id={{$game.Second.ID}}"
+          <a href="/player?id={{$game.Second.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
             >{{$game.Second.Emoji}} {{$game.Second.Name}}</a
           >
         </td>
         <td class="hide-small">
-          {{range $game.Participants}}<a href="/player?id={{.ID}}" title="{{.Name}}"
+          {{range $game.Participants}}<a href="/player?id={{.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}" title="{{.Name}}"
             >{{.Emoji}}</a
           >{{end}}
         </td>

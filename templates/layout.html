@@ -18,10 +18,25 @@
     <div class="container">
       <nav class="nav">
         <span id="horse-icon" style="cursor: pointer;">🐴</span>
-        <a href="/" {{if eq .Path "/"}}class="active"{{end}}>Stilling</a>
-        <a href="/games" {{if eq .Path "/games"}}class="active"{{end}}>Kampe</a>
-        <a href="/h2h" {{if eq .Path "/h2h"}}class="active"{{end}}>H2H</a>
-        <a href="/new" class="push {{if eq .Path "/new"}}active{{end}}">Tilføj kamp</a>
+        <a href="/{{if .SeasonExplicit}}?season={{.SeasonID}}{{end}}" {{if eq .Path "/"}}class="active"{{end}}>Stilling</a>
+        <a href="/games{{if .SeasonExplicit}}?season={{.SeasonID}}{{end}}" {{if eq .Path "/games"}}class="active"{{end}}>Kampe</a>
+        <a href="/h2h{{if .SeasonExplicit}}?season={{.SeasonID}}{{end}}" {{if eq .Path "/h2h"}}class="active"{{end}}>H2H</a>
+        <div class="nav-right">
+          <form class="season-filter" aria-label="Sæson filter">
+            <label class="season-label">
+              <span class="sr-only">Sæson</span>
+              <select id="season-filter" name="season">
+                <option value="0" {{if eq .SeasonID 0}}selected{{end}}>Alle sæsoner</option>
+                {{range .Seasons}}
+                <option value="{{.ID}}" {{if eq $.SeasonID .ID}}selected{{end}}>
+                  {{.Name}}
+                </option>
+                {{end}}
+              </select>
+            </label>
+          </form>
+          <a href="/new{{if .SeasonExplicit}}?season={{.SeasonID}}{{end}}" class="{{if eq .Path "/new"}}active{{end}}">Tilføj kamp</a>
+        </div>
       </nav>
       <audio id="horse-sound" preload="auto">
         <source src="/static/hest.mp3" type="audio/mpeg">
@@ -29,7 +44,8 @@
       <main class="card">{{template "content" .}}</main>
       <footer class="footer">
         <span><a href="/rules">Regler</a></span>
-        <span>{{version}}</span>
+        <span class="footer-sep">|</span>
+        <span><a href="https://github.com/martinohansen/hest">{{version}}</a></span>
       </footer>
     </div>
     <script>
@@ -79,6 +95,16 @@
             cb.checked = true;
           });
       });
+
+      const seasonSelect = document.getElementById("season-filter");
+      if (seasonSelect) {
+        seasonSelect.addEventListener("change", function () {
+          const url = new URL(window.location.href);
+          const value = seasonSelect.value || "0";
+          url.searchParams.set("season", value);
+          window.location.href = url.toString();
+        });
+      }
     </script>
   </body>
 </html>
