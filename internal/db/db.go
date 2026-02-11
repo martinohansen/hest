@@ -32,6 +32,7 @@ type Game struct {
 	Second       Player
 	Participants []Player
 	CreatedBy    string
+	Weather      string
 }
 
 type PlayerGameHistoryEntry struct {
@@ -75,6 +76,25 @@ func Open(path string) (*Store, error) {
 func ensureSchema(db *sql.DB) error {
 	if err := createTables(db); err != nil {
 		return err
+	}
+	if err := migrate(db); err != nil {
+		return err
+	}
+	return nil
+}
+
+// migrate applies incremental schema changes.
+func migrate(db *sql.DB) error {
+	// Add weather column to games table if it doesn't exist.
+	var count int
+	err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('games') WHERE name='weather'`).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		if _, err := db.Exec(`ALTER TABLE games ADD COLUMN weather TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -214,7 +234,8 @@ func (s *Store) ListGames(filter *DateRange) ([]Game, error) {
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
-	COALESCE(g.created_by, '')
+	COALESCE(g.created_by, ''),
+	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
@@ -240,7 +261,7 @@ JOIN players second ON second.id = g.second_id
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
 			return nil, err
 		}
 		g.Winner.ID = winnerID
@@ -510,7 +531,8 @@ func (s *Store) PlayerGames(playerID int, filter *DateRange) ([]Game, error) {
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
-	COALESCE(g.created_by, '')
+	COALESCE(g.created_by, ''),
+	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
@@ -537,7 +559,7 @@ ORDER BY g.played_at DESC, g.id DESC
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
 			return nil, err
 		}
 		g.Winner.ID = winnerID
@@ -692,7 +714,7 @@ func validateGameParticipants(participantIDs []int, winnerID, secondID int) erro
 	return nil
 }
 
-func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, secondID int, createdBy string) error {
+func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, secondID int, createdBy string, weather string) error {
 	uniqueIDs := Dedupe(participantIDs)
 	if err := validateGameParticipants(uniqueIDs, winnerID, secondID); err != nil {
 		return err
@@ -708,7 +730,7 @@ func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, seco
 		}
 	}()
 
-	res, err := tx.Exec(`INSERT INTO games (played_at, winner_id, second_id, created_by) VALUES (?, ?, ?, ?)`, playedAt, winnerID, secondID, createdBy)
+	res, err := tx.Exec(`INSERT INTO games (played_at, winner_id, second_id, created_by, weather) VALUES (?, ?, ?, ?, ?)`, playedAt, winnerID, secondID, createdBy, weather)
 	if err != nil {
 		return err
 	}
@@ -755,7 +777,8 @@ func (s *Store) GetH2HStats(player1ID, player2ID int, filter *DateRange) (H2HSta
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
-	COALESCE(g.created_by, '')
+	COALESCE(g.created_by, ''),
+	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
@@ -786,7 +809,7 @@ JOIN game_players gp2 ON g.id = gp2.game_id AND gp2.player_id = ?
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
 			return stats, err
 		}
 		g.Winner.ID = winnerID
