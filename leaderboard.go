@@ -8,6 +8,7 @@ import (
 type PlayerWithRank struct {
 	Player
 	OriginalRank int
+	RankChange   int // positive means moved up, negative means moved down, 0 means no change
 }
 
 type leaderboardForm struct {
@@ -37,6 +38,16 @@ func (l leaderboardForm) withPlayers(leaderboard []Player) leaderboardForm {
 		}
 	}
 	l.Players = rankedPlayers
+	return l
+}
+
+// withRankChanges adds rank change information to the leaderboard
+func (l leaderboardForm) withRankChanges(rankChanges map[int]int) leaderboardForm {
+	for i := range l.Players {
+		if change, ok := rankChanges[l.Players[i].ID]; ok {
+			l.Players[i].RankChange = change
+		}
+	}
 	return l
 }
 
@@ -91,13 +102,21 @@ func (a *App) handleLeaderboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	players, err := a.Leaderboard(seasonFilter(selectedSeason))
+	filter := seasonFilter(selectedSeason)
+	players, err := a.Leaderboard(filter)
 	if err != nil {
 		http.Error(w, "loading leaderboard", http.StatusInternalServerError)
 		return
 	}
 
-	form := newLeaderboardForm().withPlayers(players).withSort(sortBy, sortDir)
+	// Calculate rank changes over the last 2 games
+	rankChanges, err := a.calculateRankChanges(filter)
+	if err != nil {
+		http.Error(w, "calculating rank changes", http.StatusInternalServerError)
+		return
+	}
+
+	form := newLeaderboardForm().withPlayers(players).withRankChanges(rankChanges).withSort(sortBy, sortDir)
 	form.seasonContext = ctx
 
 	// If HTMX request, return only the table partial

@@ -151,6 +151,16 @@ h2.stat-label {
 .table .rank {
   width: 1%;
   white-space: nowrap;
+  text-align: center;
+}
+
+.rank-with-arrow {
+  position: relative;
+}
+
+.rank-number {
+  display: inline-block;
+  position: relative;
 }
 
 .table th {
@@ -605,4 +615,22 @@ body.page-roll {
   flex-shrink: 0;
   min-width: 75px;
   justify-content: center;
+}
+
+.rank-arrow {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.rank-up {
+  color: #2e7d32;
+}
+
+.rank-down {
+  color: #c62828;
 }

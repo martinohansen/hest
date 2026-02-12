@@ -39,7 +39,9 @@
   <tbody>
     {{if .Players}} {{range $p := .Players}}
     <tr>
-      <td class="rank">{{$p.OriginalRank}}</td>
+      <td class="rank rank-with-arrow">
+        <span class="rank-number">{{$p.OriginalRank}}</span>{{if gt $p.RankChange 0}}<span class="rank-arrow rank-up">▲</span>{{else if lt $p.RankChange 0}}<span class="rank-arrow rank-down">▼</span>{{end}}
+      </td>
       <td class="name"><a href="/player?id={{$p.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}">{{$p.Emoji}} {{$p.Name}}</a></td>
       <td class="num">{{$p.Games}}</td>
       <td class="num">{{$p.Wins}}</td>
