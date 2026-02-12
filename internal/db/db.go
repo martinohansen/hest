@@ -783,6 +783,47 @@ func (s *Store) UpdateGameWeather(gameID int, weather string) error {
 	return err
 }
 
+// GetGameByID returns a single game by its ID, including participants.
+func (s *Store) GetGameByID(id int) (Game, bool, error) {
+	query := `
+SELECT g.id, g.played_at,
+	g.winner_id, winner.name, winner.emoji,
+	g.second_id, second.name, second.emoji,
+	COALESCE(g.created_by, ''),
+	COALESCE(g.weather, '')
+FROM games g
+JOIN players winner ON winner.id = g.winner_id
+JOIN players second ON second.id = g.second_id
+WHERE g.id = ?
+`
+	var (
+		g        Game
+		winnerID int
+		secondID int
+		wEmoji   string
+		sEmoji   string
+	)
+	err := s.db.QueryRow(query, id).Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Game{}, false, nil
+		}
+		return Game{}, false, err
+	}
+	g.Winner.ID = winnerID
+	g.Winner.Emoji = wEmoji
+	g.Second.ID = secondID
+	g.Second.Emoji = sEmoji
+
+	participantMap, err := s.loadGameParticipants([]int{g.ID})
+	if err != nil {
+		return Game{}, false, err
+	}
+	g.Participants = participantMap[g.ID]
+
+	return g, true, nil
+}
+
 // GetH2HStats returns head-to-head statistics for two players, including only games where both participated.
 func (s *Store) GetH2HStats(player1ID, player2ID int, filter *DateRange) (H2HStats, error) {
 	var stats H2HStats

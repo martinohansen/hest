@@ -496,3 +496,46 @@ canvas {
 body.page-roll {
   animation: pageRoll 2s ease-in-out;
 }
+
+.game-placements {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.game-placement {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.game-participants {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.game-participant {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.game-participant-emoji {
+  font-size: 1.2em;
+}
+
+.game-meta {
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--muted);
+}

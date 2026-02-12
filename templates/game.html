@@ -1,0 +1,49 @@
+{{define "content"}}
+<h1>Kamp #{{.Game.ID}}</h1>
+
+<div class="player-stats">
+  <div class="stat">
+    <span class="stat-label">Dato</span>
+    <span class="stat-value">{{.Game.PlayedAt.Format "2006-01-02"}}</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Vejr</span>
+    <span class="stat-value">{{if .Game.Weather}}{{.Game.Weather}}{{else}}-{{end}}</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Deltagere</span>
+    <span class="stat-value">{{len .Game.Participants}}</span>
+  </div>
+</div>
+
+<div class="game-placements">
+  <div class="game-placement">
+    <span class="stat-label">🥇 Vinder</span>
+    <span class="stat-value">
+      <a href="/player?id={{.Game.Winner.ID}}">{{.Game.Winner.Emoji}} {{.Game.Winner.Name}}</a>
+    </span>
+  </div>
+  <div class="game-placement">
+    <span class="stat-label">🥈 2. plads</span>
+    <span class="stat-value">
+      <a href="/player?id={{.Game.Second.ID}}">{{.Game.Second.Emoji}} {{.Game.Second.Name}}</a>
+    </span>
+  </div>
+</div>
+
+{{if .Game.Participants}}
+<h2 class="stat-label" style="margin-top: 2rem">Alle deltagere</h2>
+<div class="game-participants">
+  {{range .Game.Participants}}
+  <a href="/player?id={{.ID}}" class="game-participant" title="{{.Name}}">
+    <span class="game-participant-emoji">{{.Emoji}}</span>
+    <span>{{.Name}}</span>
+  </a>
+  {{end}}
+</div>
+{{end}}
+
+{{if .Game.CreatedBy}}
+<p class="game-meta">Tilføjet af {{.Game.CreatedBy}}</p>
+{{end}}
+{{end}}
