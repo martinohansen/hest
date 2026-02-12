@@ -68,7 +68,7 @@
     {{range $index, $game := .Games}}
     <tr>
       <td class="rank hide-small" style="text-align: center">{{$game.ID}}</td>
-      <td><a href="/game?id={{$game.ID}}">{{$game.PlayedAt.Format "2006-01-02"}}</a></td>
+      <td class="nowrap"><a href="/game?id={{$game.ID}}">{{$game.PlayedAt.Format "2006-01-02"}}</a></td>
       <td class="nowrap">
         <a href="/player?id={{$game.Winner.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
           >{{$game.Winner.Emoji}} {{$game.Winner.Name}}</a
