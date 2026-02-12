@@ -6,9 +6,10 @@ import (
 )
 
 type gameDetailView struct {
-	Path  string
-	Title string
-	Game  Game
+	Path      string
+	Title     string
+	Game      Game
+	MaxGameID int
 	seasonContext
 }
 
@@ -46,10 +47,17 @@ func (a *App) handleGameDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	maxGameID, err := a.store.GetMaxGameID()
+	if err != nil {
+		http.Error(w, "failed to load max game ID", http.StatusInternalServerError)
+		return
+	}
+
 	view := gameDetailView{
-		Path:  "/game",
-		Title: "Kamp #" + gameIDStr,
-		Game:  Game(gameDB),
+		Path:      "/game",
+		Title:     "Kamp #" + gameIDStr,
+		Game:      Game(gameDB),
+		MaxGameID: maxGameID,
 	}
 	view.seasonContext = ctx
 
