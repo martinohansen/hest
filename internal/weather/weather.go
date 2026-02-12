@@ -17,12 +17,18 @@ var (
 
 func init() {
 	if v := os.Getenv("HEST_LATITUDE"); v != "" {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: invalid HEST_LATITUDE %q: %v\n", v, err)
+		} else {
 			latitude = f
 		}
 	}
 	if v := os.Getenv("HEST_LONGITUDE"); v != "" {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: invalid HEST_LONGITUDE %q: %v\n", v, err)
+		} else {
 			longitude = f
 		}
 	}

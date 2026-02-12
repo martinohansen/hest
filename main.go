@@ -35,6 +35,8 @@ func main() {
 	}
 }
 
+// backfillWeather fetches and stores weather data for all games that don't
+// have it yet, using the Open-Meteo historic API. Runs once at startup.
 func backfillWeather(store *db.Store) {
 	games, err := store.GamesWithoutWeather()
 	if err != nil {
