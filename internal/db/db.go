@@ -756,6 +756,33 @@ func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, seco
 	return err
 }
 
+// GamesWithoutWeather returns all games that have no weather data.
+func (s *Store) GamesWithoutWeather() ([]Game, error) {
+	rows, err := s.db.Query(`
+SELECT id, played_at FROM games WHERE weather = '' ORDER BY played_at ASC
+`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var games []Game
+	for rows.Next() {
+		var g Game
+		if err := rows.Scan(&g.ID, &g.PlayedAt); err != nil {
+			return nil, err
+		}
+		games = append(games, g)
+	}
+	return games, rows.Err()
+}
+
+// UpdateGameWeather sets the weather string for a specific game.
+func (s *Store) UpdateGameWeather(gameID int, weather string) error {
+	_, err := s.db.Exec(`UPDATE games SET weather = ? WHERE id = ?`, weather, gameID)
+	return err
+}
+
 // GetH2HStats returns head-to-head statistics for two players, including only games where both participated.
 func (s *Store) GetH2HStats(player1ID, player2ID int, filter *DateRange) (H2HStats, error) {
 	var stats H2HStats

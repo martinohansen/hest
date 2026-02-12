@@ -4,14 +4,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
 // Default location: Copenhagen, Denmark
-const (
-	defaultLatitude  = 55.6761
-	defaultLongitude = 12.5683
+var (
+	latitude  = 55.6761
+	longitude = 12.5683
 )
+
+func init() {
+	if v := os.Getenv("HEST_LATITUDE"); v != "" {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			latitude = f
+		}
+	}
+	if v := os.Getenv("HEST_LONGITUDE"); v != "" {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			longitude = f
+		}
+	}
+}
 
 // WMO Weather interpretation codes mapped to emoji
 var wmoEmoji = map[int]string{
@@ -53,7 +68,8 @@ type response struct {
 }
 
 // Fetch returns a weather emoji and temperature string for the given date.
-// It uses the Open-Meteo API with Copenhagen, Denmark as the location.
+// Location defaults to Copenhagen, Denmark but can be overridden with
+// HEST_LATITUDE and HEST_LONGITUDE environment variables.
 func Fetch(date time.Time, client *http.Client) (string, error) {
 	if client == nil {
 		client = &http.Client{Timeout: 5 * time.Second}
@@ -61,8 +77,8 @@ func Fetch(date time.Time, client *http.Client) (string, error) {
 
 	dateStr := date.Format("2006-01-02")
 	url := fmt.Sprintf(
-		"https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&daily=weather_code,temperature_2m_max&timezone=Europe%%2FCopenhagen&start_date=%s&end_date=%s",
-		defaultLatitude, defaultLongitude, dateStr, dateStr,
+		"https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&daily=weather_code,temperature_2m_max&timezone=auto&start_date=%s&end_date=%s",
+		latitude, longitude, dateStr, dateStr,
 	)
 
 	return fetchFromURL(url, client, date)
