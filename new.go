@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/martinohansen/hest/internal/db"
+	"github.com/martinohansen/hest/internal/weather"
 )
 
 type gameForm struct {
@@ -244,7 +245,12 @@ func (a *App) saveGameCommon(w http.ResponseWriter, r *http.Request) ([]Player, 
 		return nil, time.Time{}, false
 	}
 
-	if err := a.store.AddGame(playedAt, uniqueIDs, winnerID, secondID, username); err != nil {
+	weatherStr, err := weather.Fetch(playedAt, nil)
+	if err != nil {
+		slog.Warn("could not fetch weather", "error", err)
+	}
+
+	if err := a.store.AddGame(playedAt, uniqueIDs, winnerID, secondID, username, weatherStr); err != nil {
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return nil, time.Time{}, false
 	}

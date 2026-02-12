@@ -32,6 +32,7 @@ type Game struct {
 	Second       Player
 	Participants []Player
 	CreatedBy    string
+	Weather      string
 }
 
 type PlayerGameHistoryEntry struct {
@@ -75,6 +76,25 @@ func Open(path string) (*Store, error) {
 func ensureSchema(db *sql.DB) error {
 	if err := createTables(db); err != nil {
 		return err
+	}
+	if err := migrate(db); err != nil {
+		return err
+	}
+	return nil
+}
+
+// migrate applies incremental schema changes.
+func migrate(db *sql.DB) error {
+	// Add weather column to games table if it doesn't exist.
+	var count int
+	err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('games') WHERE name='weather'`).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		if _, err := db.Exec(`ALTER TABLE games ADD COLUMN weather TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -214,7 +234,8 @@ func (s *Store) ListGames(filter *DateRange) ([]Game, error) {
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
-	COALESCE(g.created_by, '')
+	COALESCE(g.created_by, ''),
+	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
@@ -240,7 +261,7 @@ JOIN players second ON second.id = g.second_id
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
 			return nil, err
 		}
 		g.Winner.ID = winnerID
@@ -510,7 +531,8 @@ func (s *Store) PlayerGames(playerID int, filter *DateRange) ([]Game, error) {
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
-	COALESCE(g.created_by, '')
+	COALESCE(g.created_by, ''),
+	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
@@ -537,7 +559,7 @@ ORDER BY g.played_at DESC, g.id DESC
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
 			return nil, err
 		}
 		g.Winner.ID = winnerID
@@ -692,7 +714,7 @@ func validateGameParticipants(participantIDs []int, winnerID, secondID int) erro
 	return nil
 }
 
-func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, secondID int, createdBy string) error {
+func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, secondID int, createdBy string, weather string) error {
 	uniqueIDs := Dedupe(participantIDs)
 	if err := validateGameParticipants(uniqueIDs, winnerID, secondID); err != nil {
 		return err
@@ -708,7 +730,7 @@ func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, seco
 		}
 	}()
 
-	res, err := tx.Exec(`INSERT INTO games (played_at, winner_id, second_id, created_by) VALUES (?, ?, ?, ?)`, playedAt, winnerID, secondID, createdBy)
+	res, err := tx.Exec(`INSERT INTO games (played_at, winner_id, second_id, created_by, weather) VALUES (?, ?, ?, ?, ?)`, playedAt, winnerID, secondID, createdBy, weather)
 	if err != nil {
 		return err
 	}
@@ -734,6 +756,81 @@ func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, seco
 	return err
 }
 
+// GamesWithoutWeather returns all games that have no weather data.
+func (s *Store) GamesWithoutWeather() ([]Game, error) {
+	rows, err := s.db.Query(`
+SELECT id, played_at FROM games WHERE weather = '' ORDER BY played_at ASC
+`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var games []Game
+	for rows.Next() {
+		var g Game
+		if err := rows.Scan(&g.ID, &g.PlayedAt); err != nil {
+			return nil, err
+		}
+		games = append(games, g)
+	}
+	return games, rows.Err()
+}
+
+// UpdateGameWeather sets the weather string for a specific game.
+func (s *Store) UpdateGameWeather(gameID int, weather string) error {
+	_, err := s.db.Exec(`UPDATE games SET weather = ? WHERE id = ?`, weather, gameID)
+	return err
+}
+
+// GetMaxGameID returns the maximum game ID in the database.
+func (s *Store) GetMaxGameID() (int, error) {
+	var maxID int
+	err := s.db.QueryRow(`SELECT COALESCE(MAX(id), 0) FROM games`).Scan(&maxID)
+	return maxID, err
+}
+
+// GetGameByID returns a single game by its ID, including participants.
+func (s *Store) GetGameByID(id int) (Game, bool, error) {
+	query := `
+SELECT g.id, g.played_at,
+	g.winner_id, winner.name, winner.emoji,
+	g.second_id, second.name, second.emoji,
+	COALESCE(g.created_by, ''),
+	COALESCE(g.weather, '')
+FROM games g
+JOIN players winner ON winner.id = g.winner_id
+JOIN players second ON second.id = g.second_id
+WHERE g.id = ?
+`
+	var (
+		g        Game
+		winnerID int
+		secondID int
+		wEmoji   string
+		sEmoji   string
+	)
+	err := s.db.QueryRow(query, id).Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Game{}, false, nil
+		}
+		return Game{}, false, err
+	}
+	g.Winner.ID = winnerID
+	g.Winner.Emoji = wEmoji
+	g.Second.ID = secondID
+	g.Second.Emoji = sEmoji
+
+	participantMap, err := s.loadGameParticipants([]int{g.ID})
+	if err != nil {
+		return Game{}, false, err
+	}
+	g.Participants = participantMap[g.ID]
+
+	return g, true, nil
+}
+
 // GetH2HStats returns head-to-head statistics for two players, including only games where both participated.
 func (s *Store) GetH2HStats(player1ID, player2ID int, filter *DateRange) (H2HStats, error) {
 	var stats H2HStats
@@ -755,7 +852,8 @@ func (s *Store) GetH2HStats(player1ID, player2ID int, filter *DateRange) (H2HSta
 SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
-	COALESCE(g.created_by, '')
+	COALESCE(g.created_by, ''),
+	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
 JOIN players second ON second.id = g.second_id
@@ -786,7 +884,7 @@ JOIN game_players gp2 ON g.id = gp2.game_id AND gp2.player_id = ?
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
 			return stats, err
 		}
 		g.Winner.ID = winnerID

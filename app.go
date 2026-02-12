@@ -30,6 +30,7 @@ func (a *App) routes() http.Handler {
 	mux.Handle("/static/", http.StripPrefix("/static/", staticServer))
 	mux.HandleFunc("/", a.handleLeaderboard)
 	mux.HandleFunc("/games", a.handleGames)
+	mux.HandleFunc("/game", a.handleGameDetail)
 	mux.HandleFunc("/games/save", a.handleSaveGame)
 	mux.HandleFunc("/games/save-and-new", a.handleSaveAndNewGame)
 	mux.HandleFunc("/seasons", a.handleSeasons)
