@@ -32,6 +32,7 @@ type Game struct {
 	Second       Player
 	Participants []Player
 	CreatedBy    string
+	CreatedAt    time.Time
 	Weather      string
 }
 
@@ -235,6 +236,7 @@ SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
 	COALESCE(g.created_by, ''),
+	g.created_at,
 	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
@@ -261,7 +263,7 @@ JOIN players second ON second.id = g.second_id
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.CreatedAt, &g.Weather); err != nil {
 			return nil, err
 		}
 		g.Winner.ID = winnerID
@@ -532,6 +534,7 @@ SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
 	COALESCE(g.created_by, ''),
+	g.created_at,
 	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
@@ -559,7 +562,7 @@ ORDER BY g.played_at DESC, g.id DESC
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.CreatedAt, &g.Weather); err != nil {
 			return nil, err
 		}
 		g.Winner.ID = winnerID
@@ -797,6 +800,7 @@ SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
 	COALESCE(g.created_by, ''),
+	g.created_at,
 	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
@@ -810,7 +814,7 @@ WHERE g.id = ?
 		wEmoji   string
 		sEmoji   string
 	)
-	err := s.db.QueryRow(query, id).Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather)
+	err := s.db.QueryRow(query, id).Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.CreatedAt, &g.Weather)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return Game{}, false, nil
@@ -853,6 +857,7 @@ SELECT g.id, g.played_at,
 	g.winner_id, winner.name, winner.emoji,
 	g.second_id, second.name, second.emoji,
 	COALESCE(g.created_by, ''),
+	g.created_at,
 	COALESCE(g.weather, '')
 FROM games g
 JOIN players winner ON winner.id = g.winner_id
@@ -884,7 +889,7 @@ JOIN game_players gp2 ON g.id = gp2.game_id AND gp2.player_id = ?
 			wEmoji   string
 			sEmoji   string
 		)
-		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.Weather); err != nil {
+		if err := rows.Scan(&g.ID, &g.PlayedAt, &winnerID, &g.Winner.Name, &wEmoji, &secondID, &g.Second.Name, &sEmoji, &g.CreatedBy, &g.CreatedAt, &g.Weather); err != nil {
 			return stats, err
 		}
 		g.Winner.ID = winnerID

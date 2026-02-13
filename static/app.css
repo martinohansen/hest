@@ -1,4 +1,8 @@
+/* ============================================================================
+   CSS VARIABLES
+   ============================================================================ */
 :root {
+  /* Colors */
   --bg: #f6f7fb;
   --card: #ffffff;
   --text: #1f2933;
@@ -6,8 +10,28 @@
   --border: #e5e7eb;
   --accent: #464646;
   --accent-soft: #eaeaea;
+  --surface: #fafafa;
+  --success: #2e7d32;
+  --error: #b00020;
+  --rank-down: #c62828;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-full: 16px;
 }
 
+/* ============================================================================
+   BASE RESET & TYPOGRAPHY
+   ============================================================================ */
 *,
 *::before,
 *::after {
@@ -21,11 +45,37 @@ body {
   color: var(--text);
 }
 
+h1 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+}
+
+h2.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+abbr {
+  text-decoration: none;
+}
+
+canvas {
+  max-height: 300px;
+}
+
+/* ============================================================================
+   LINKS
+   Links have NO padding by default to prevent layout issues in tables/grids.
+   Add .link-padded class or specific overrides where padding is needed.
+   ============================================================================ */
 a {
   color: var(--accent);
   text-decoration: none;
-  padding: 2px 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   transition: background 0.15s ease;
 }
 
@@ -34,26 +84,65 @@ a:hover {
   text-decoration: none;
 }
 
-abbr {
-  text-decoration: none;
+/* Links that need padding for larger click targets */
+.link-padded,
+.nav a,
+.h2h-name-link {
+  padding: 2px var(--spacing-xs);
 }
 
+/* ============================================================================
+   LAYOUT CONTAINERS
+   ============================================================================ */
 .container {
   max-width: 720px;
-  margin: 16px auto;
-  padding: 0 12px 24px;
+  margin: var(--spacing-lg) auto;
+  padding: 0 var(--spacing-md) var(--spacing-xl);
 }
 
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.07);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.stack > p {
+  margin: 0;
+}
+
+.stack > div > p {
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.stack > button {
+  margin-top: var(--spacing-sm);
+}
+
+.stack > .actions {
+  margin-top: 14px;
+}
+
+/* ============================================================================
+   NAVIGATION
+   ============================================================================ */
 .nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--spacing-md);
   align-items: center;
-  margin-bottom: 16px;
-  padding: 12px;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 8px 20px rgba(17, 24, 39, 0.05);
 }
 
@@ -61,7 +150,7 @@ abbr {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-md);
   flex-wrap: wrap;
 }
 
@@ -81,44 +170,15 @@ abbr {
 .season-filter select {
   width: 100px;
   max-width: 100px;
-  padding: 2px 4px;
+  padding: 2px var(--spacing-xs);
   font-size: 16px;
   line-height: 1.2;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.07);
-}
-
-h1 {
-  margin-top: 0;
-  margin-bottom: 12px;
-}
-
-h2.stat-label {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 600;
-  text-transform: uppercase;
-  margin-top: 24px;
-  margin-bottom: 12px;
-}
-
+/* ============================================================================
+   TABLES
+   Optimized for compact display with proper spacing hierarchy.
+   ============================================================================ */
 .table {
   border-collapse: collapse;
   width: 100%;
@@ -131,38 +191,7 @@ h2.stat-label {
   text-align: left;
 }
 
-.table .rank,
-.table .name {
-  padding-right: 8px;
-}
-
-.table .num {
-  text-align: center;
-  padding-left: 8px;
-  padding-right: 8px;
-  width: 7%;
-  white-space: nowrap;
-}
-
-.table .num + .num {
-  padding-left: 6px;
-}
-
-.table .rank {
-  width: 1%;
-  white-space: nowrap;
-  text-align: center;
-}
-
-.rank-with-arrow {
-  position: relative;
-}
-
-.rank-number {
-  display: inline-block;
-  position: relative;
-}
-
+/* Table headers */
 .table th {
   background: transparent;
   font-weight: 700;
@@ -182,55 +211,103 @@ h2.stat-label {
   background: transparent;
 }
 
-.nowrap {
+/* Table column types */
+.table .rank {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+  padding-right: var(--spacing-sm);
+}
+
+.table .name {
+  padding-right: var(--spacing-sm);
+}
+
+/* Add padding to name column links for proper rank indicator spacing */
+.table .name a {
+  padding-left: var(--spacing-xs);
+  padding-right: var(--spacing-xs);
+}
+
+.table .num {
+  text-align: center;
+  padding-left: var(--spacing-sm);
+  padding-right: var(--spacing-sm);
+  width: 7%;
   white-space: nowrap;
 }
 
-.stack {
+.table .num + .num {
+  padding-left: 6px;
+}
+
+/* ============================================================================
+   RANK SYSTEM
+   All rank-related styles grouped together for easier maintenance.
+   ============================================================================ */
+.rank-with-arrow {
+  position: relative;
+}
+
+.rank-number {
+  display: inline-block;
+  position: relative;
+}
+
+.rank-arrow {
+  position: absolute;
+  right: -12px; /* Positioned just outside the rank number */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.rank-up {
+  color: var(--success);
+}
+
+.rank-down {
+  color: var(--rank-down);
+}
+
+/* ============================================================================
+   FORMS & INPUTS
+   ============================================================================ */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+select {
+  padding: 10px var(--spacing-md);
+  border: 1px solid var(--border);
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+input[type="number"] {
+  width: 100px;
+}
+
+.inline-form {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-sm);
+  align-items: center;
+  flex-wrap: nowrap;
 }
 
-.stack > p {
-  margin: 0;
-}
-
-.stack > div > p {
-  margin: 0 0 8px 0;
-}
-
-.stack > button {
-  margin-top: 8px;
-}
-
-.stack > .actions {
-  margin-top: 14px;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 12px;
-}
-
-.actions button {
+.inline-form input[type="text"] {
   flex: 1;
   min-width: 120px;
-}
-
-.actions button.ghost {
-  order: -1;
 }
 
 button {
   border: none;
   background: var(--accent);
   color: #fff;
-  padding: 10px 16px;
-  border-radius: 8px;
+  padding: 10px var(--spacing-lg);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 600;
   font-size: 15px;
@@ -245,47 +322,40 @@ button.ghost {
   color: var(--accent);
 }
 
-input[type="text"],
-input[type="password"],
-input[type="number"],
-input[type="date"],
-select {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  font-size: 16px;
-  border-radius: 6px;
-}
-
-input[type="number"] {
-  width: 100px;
-}
-
-.inline-form {
+.actions {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: var(--spacing-md);
 }
 
-.inline-form input[type="text"] {
+.actions button {
   flex: 1;
   min-width: 120px;
 }
 
+.actions button.ghost {
+  order: -1;
+}
+
+/* ============================================================================
+   LISTS & GRID ITEMS
+   ============================================================================ */
 .list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .list-item {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   align-items: center;
-  padding: 10px 12px;
+  padding: 10px var(--spacing-md);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fafafa;
+  border-radius: var(--radius-md);
+  background: var(--surface);
 }
 
 .list-item input[type="checkbox"] {
@@ -293,6 +363,47 @@ input[type="number"] {
   height: 18px;
 }
 
+/* ============================================================================
+   PLAYER STATS
+   ============================================================================ */
+.player-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.player-stats .stat {
+  align-items: center;
+  text-align: center;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.responsive-label .label-short {
+  display: none;
+}
+
+/* ============================================================================
+   HEAD-TO-HEAD (H2H) COMPONENTS
+   ============================================================================ */
 .h2h-selects,
 .score-selects {
   display: grid;
@@ -371,173 +482,52 @@ input[type="number"] {
   align-self: stretch;
 }
 
-.error {
-  color: #b00020;
-  margin: 0;
-}
-
-.success {
-  color: #2e7d32;
-  margin: 0;
-  font-weight: 600;
-}
-
-.notice {
-  padding: 12px;
-  border: 1px solid var(--border);
-  background: #f3f4f6;
-  border-radius: 8px;
-}
-
-.season-list {
+/* ============================================================================
+   GAME DETAIL COMPONENTS
+   ============================================================================ */
+.game-header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.season-row {
-  display: grid;
-  grid-template-columns: minmax(160px, 1.4fr) repeat(2, minmax(140px, 1fr));
-  gap: 12px;
-  align-items: end;
-}
-
-.footer {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 8px;
-  margin-top: 24px;
-  padding: 16px;
-  color: var(--muted);
-  font-size: 14px;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  margin-bottom: 20px;
 }
 
-.footer a {
-  color: var(--muted);
-  padding: 0;
-}
-
-.footer a:hover {
-  color: var(--accent);
-  background: transparent;
-}
-
-.footer-sep {
-  color: var(--muted);
-}
-
-.player-stats {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.player-stats .stat {
-  align-items: center;
-  text-align: center;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.responsive-label .label-short {
-  display: none;
-}
-
-@media (max-width: 720px) {
-  .hide-small {
-    display: none;
-  }
-
-  .player-stats {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .responsive-label .label-full {
-    display: none;
-  }
-
-  .responsive-label .label-short {
-    display: inline;
-  }
-
-  .season-filter {
-    display: none;
-  }
-
-  .season-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-canvas {
-  max-height: 300px;
-}
-
-/* Easter egg: Page roll animation */
-@keyframes pageRoll {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-body.page-roll {
-  animation: pageRoll 2s ease-in-out;
+.game-header h1 {
+  margin: 0;
 }
 
 .game-placements {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin: 16px 0;
+  gap: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
 }
 
 .game-placement {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 16px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-lg);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fafafa;
+  border-radius: var(--radius-md);
+  background: var(--surface);
 }
 
 .game-participants {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .game-participant {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   align-items: center;
-  padding: 10px 12px;
+  padding: 10px var(--spacing-md);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fafafa;
+  border-radius: var(--radius-md);
+  background: var(--surface);
 }
 
 .game-participant-emoji {
@@ -545,21 +535,9 @@ body.page-roll {
 }
 
 .game-meta {
-  margin-top: 24px;
+  margin-top: var(--spacing-xl);
   font-size: 13px;
   color: var(--muted);
-}
-
-.game-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.game-header h1 {
-  margin: 0;
 }
 
 .badge-group {
@@ -572,6 +550,21 @@ body.page-roll {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) 10px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  flex-shrink: 0;
+  min-width: 75px;
+  justify-content: center;
 }
 
 .game-nav-arrow {
@@ -602,35 +595,128 @@ body.page-roll {
   line-height: 1.5;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  background: var(--accent-soft);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.5;
-  flex-shrink: 0;
-  min-width: 75px;
+/* ============================================================================
+   SEASONS
+   ============================================================================ */
+.season-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.season-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.4fr) repeat(2, minmax(140px, 1fr));
+  gap: var(--spacing-md);
+  align-items: end;
+}
+
+/* ============================================================================
+   FOOTER
+   ============================================================================ */
+.footer {
+  display: flex;
   justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  color: var(--muted);
+  font-size: 14px;
 }
 
-.rank-arrow {
+.footer a {
+  color: var(--muted);
+  padding: 0;
+}
+
+.footer a:hover {
+  color: var(--accent);
+  background: transparent;
+}
+
+.footer-sep {
+  color: var(--muted);
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+.nowrap {
+  white-space: nowrap;
+}
+
+.sr-only {
   position: absolute;
-  right: -12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  opacity: 0.7;
-  line-height: 1;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
-.rank-up {
-  color: #2e7d32;
+.notice {
+  padding: var(--spacing-md);
+  border: 1px solid var(--border);
+  background: #f3f4f6;
+  border-radius: var(--radius-md);
 }
 
-.rank-down {
-  color: #c62828;
+.error {
+  color: var(--error);
+  margin: 0;
+}
+
+.success {
+  color: var(--success);
+  margin: 0;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   RESPONSIVE / MEDIA QUERIES
+   ============================================================================ */
+@media (max-width: 720px) {
+  .hide-small {
+    display: none;
+  }
+
+  .player-stats {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+  }
+
+  .responsive-label .label-full {
+    display: none;
+  }
+
+  .responsive-label .label-short {
+    display: inline;
+  }
+
+  .season-filter {
+    display: none;
+  }
+
+  .season-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================================
+   ANIMATIONS & EASTER EGGS
+   ============================================================================ */
+@keyframes pageRoll {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+body.page-roll {
+  animation: pageRoll 2s ease-in-out;
 }

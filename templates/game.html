@@ -26,7 +26,7 @@
       {{end}}
     </div>
     {{if .Game.Weather}}
-    <span class="badge">{{.Game.Weather}}</span>
+    <span class="badge hide-small">{{.Game.Weather}}</span>
     {{end}}
   </div>
 </div>
@@ -63,5 +63,20 @@
   {{end}}
 </div>
 {{end}} {{if .Game.CreatedBy}}
-<p class="game-meta">Tilføjet af {{.Game.CreatedBy}}</p>
+<p class="game-meta">
+  Tilføjet af {{.Game.CreatedBy}} den <time datetime="{{.Game.CreatedAt.Format "2006-01-02T15:04:05Z07:00"}}">{{.Game.CreatedAt.Format "2. Jan 2006 15:04"}}</time>
+</p>
+<script>
+  // Format time elements to user's local timezone
+  document.querySelectorAll('time[datetime]').forEach(function(timeEl) {
+    const dt = new Date(timeEl.getAttribute('datetime'));
+    const months = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+    const day = dt.getDate();
+    const month = months[dt.getMonth()];
+    const year = dt.getFullYear();
+    const hours = String(dt.getHours()).padStart(2, '0');
+    const minutes = String(dt.getMinutes()).padStart(2, '0');
+    timeEl.textContent = day + '. ' + month + ' ' + year + ' ' + hours + ':' + minutes;
+  });
+</script>
 {{end}} {{end}}
