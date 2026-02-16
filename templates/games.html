@@ -25,7 +25,7 @@
             >{{$game.Second.Emoji}} {{$game.Second.Name}}</a
           >
         </td>
-        <td class="hide-small">
+        <td class="hide-small participants">
           {{range $game.Participants}}<a href="/player?id={{.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}" title="{{.Name}}"
             >{{.Emoji}}</a
           >{{end}}

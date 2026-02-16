@@ -1,6 +1,6 @@
-/* ============================================================================
-   CSS VARIABLES
-   ============================================================================ */
+/*
+CSS VARIABLES
+*/
 :root {
   /* Colors */
   --bg: #f6f7fb;
@@ -29,9 +29,9 @@
   --radius-full: 16px;
 }
 
-/* ============================================================================
-   BASE RESET & TYPOGRAPHY
-   ============================================================================ */
+/*
+BASE RESET & TYPOGRAPHY
+*/
 *,
 *::before,
 *::after {
@@ -67,11 +67,10 @@ canvas {
   max-height: 300px;
 }
 
-/* ============================================================================
-   LINKS
-   Links have NO padding by default to prevent layout issues in tables/grids.
-   Add .link-padded class or specific overrides where padding is needed.
-   ============================================================================ */
+/*
+LINKS Links have NO padding by default to prevent layout issues in tables/grids.
+Add .link-padded class or specific overrides where padding is needed.
+*/
 a {
   color: var(--accent);
   text-decoration: none;
@@ -91,9 +90,9 @@ a:hover {
   padding: 2px var(--spacing-xs);
 }
 
-/* ============================================================================
-   LAYOUT CONTAINERS
-   ============================================================================ */
+/*
+LAYOUT CONTAINERS
+*/
 .container {
   max-width: 720px;
   margin: var(--spacing-lg) auto;
@@ -130,9 +129,9 @@ a:hover {
   margin-top: 14px;
 }
 
-/* ============================================================================
-   NAVIGATION
-   ============================================================================ */
+/*
+NAVIGATION
+*/
 .nav {
   display: flex;
   flex-wrap: wrap;
@@ -175,10 +174,9 @@ a:hover {
   line-height: 1.2;
 }
 
-/* ============================================================================
-   TABLES
-   Optimized for compact display with proper spacing hierarchy.
-   ============================================================================ */
+/*
+TABLES Optimized for compact display with proper spacing hierarchy.
+*/
 .table {
   border-collapse: collapse;
   width: 100%;
@@ -229,6 +227,11 @@ a:hover {
   padding-right: var(--spacing-xs);
 }
 
+.table .participants a {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
 .table .num {
   text-align: center;
   padding-left: var(--spacing-sm);
@@ -241,10 +244,9 @@ a:hover {
   padding-left: 6px;
 }
 
-/* ============================================================================
-   RANK SYSTEM
-   All rank-related styles grouped together for easier maintenance.
-   ============================================================================ */
+/*
+RANK SYSTEM All rank-related styles grouped together for easier maintenance.
+*/
 .rank-with-arrow {
   position: relative;
 }
@@ -272,9 +274,9 @@ a:hover {
   color: var(--rank-down);
 }
 
-/* ============================================================================
-   FORMS & INPUTS
-   ============================================================================ */
+/*
+FORMS & INPUTS
+*/
 input[type="text"],
 input[type="password"],
 input[type="number"],
@@ -339,9 +341,9 @@ button.ghost {
   order: -1;
 }
 
-/* ============================================================================
-   LISTS & GRID ITEMS
-   ============================================================================ */
+/*
+LISTS & GRID ITEMS
+*/
 .list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -363,9 +365,9 @@ button.ghost {
   height: 18px;
 }
 
-/* ============================================================================
-   PLAYER STATS
-   ============================================================================ */
+/*
+PLAYER STATS
+*/
 .player-stats {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -401,9 +403,9 @@ button.ghost {
   display: none;
 }
 
-/* ============================================================================
-   HEAD-TO-HEAD (H2H) COMPONENTS
-   ============================================================================ */
+/*
+HEAD-TO-HEAD (H2H) COMPONENTS
+*/
 .h2h-selects,
 .score-selects {
   display: grid;
@@ -482,9 +484,9 @@ button.ghost {
   align-self: stretch;
 }
 
-/* ============================================================================
-   GAME DETAIL COMPONENTS
-   ============================================================================ */
+/*
+GAME DETAIL COMPONENTS
+*/
 .game-header {
   display: flex;
   align-items: center;
@@ -595,9 +597,9 @@ button.ghost {
   line-height: 1.5;
 }
 
-/* ============================================================================
-   SEASONS
-   ============================================================================ */
+/*
+SEASONS
+*/
 .season-list {
   display: flex;
   flex-direction: column;
@@ -611,9 +613,9 @@ button.ghost {
   align-items: end;
 }
 
-/* ============================================================================
-   FOOTER
-   ============================================================================ */
+/*
+FOOTER
+*/
 .footer {
   display: flex;
   justify-content: center;
@@ -639,9 +641,9 @@ button.ghost {
   color: var(--muted);
 }
 
-/* ============================================================================
-   UTILITY CLASSES
-   ============================================================================ */
+/*
+UTILITY CLASSES
+*/
 .nowrap {
   white-space: nowrap;
 }
@@ -675,9 +677,9 @@ button.ghost {
   font-weight: 600;
 }
 
-/* ============================================================================
-   RESPONSIVE / MEDIA QUERIES
-   ============================================================================ */
+/*
+RESPONSIVE / MEDIA QUERIES
+*/
 @media (max-width: 720px) {
   .hide-small {
     display: none;
@@ -705,9 +707,9 @@ button.ghost {
   }
 }
 
-/* ============================================================================
-   ANIMATIONS & EASTER EGGS
-   ============================================================================ */
+/*
+ANIMATIONS & EASTER EGGS
+*/
 @keyframes pageRoll {
   0% {
     transform: rotate(0deg);
