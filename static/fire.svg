@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  viewBox is 800 × 185 — two natural tiles, so the content fills the canvas.
+  With preserveAspectRatio="none" the SVG stretches to fill the <img> width.
+    375 px phone : 47 % scale → thin, tall flames (realistic)
+    720 px desktop: 90 % scale → near-perfect, only 10 % squish
+    1440 px wide  : 180 % scale → mild widening, still fire-shaped
+  Silhouette paths tile at 400 px (left y = right y per layer).
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 800 185" width="800" height="185"
+     preserveAspectRatio="none">
+<style>
+.fl {transform-box:fill-box;transform-origin:50% 100%;animation:flk  ease-in-out infinite alternate}
+.flr{transform-box:fill-box;transform-origin:50% 100%;animation:flkr ease-in-out infinite alternate}
+.ms {animation:msa 2.4s ease-in-out infinite alternate}
+.ms2{animation:msa 3.1s ease-in-out infinite alternate}
+@keyframes flk {from{transform:skewX(-8deg) scaleY(.93) translateY(2px);opacity:.84}to{transform:skewX(7deg) scaleY(1.07) translateY(-2px);opacity:1}}
+@keyframes flkr{from{transform:skewX(7deg) scaleY(.95) translateY(3px);opacity:.88}to{transform:skewX(-9deg) scaleY(1.05) translateY(-3px);opacity:.98}}
+@keyframes msa {from{opacity:.86}to{opacity:1}}
+</style>
+<defs>
+  <!-- silhouette gradients — userSpaceOnUse keeps colour bands at fixed y levels -->
+  <linearGradient id="sg1" x1="0" y1="185" x2="0" y2="0" gradientUnits="userSpaceOnUse">
+    <stop offset="0%"   stop-color="#440600"/>
+    <stop offset="10%"  stop-color="#881200"/>
+    <stop offset="30%"  stop-color="#c42400" stop-opacity=".98"/>
+    <stop offset="58%"  stop-color="#ee4800" stop-opacity=".72"/>
+    <stop offset="80%"  stop-color="#ff8000" stop-opacity=".28"/>
+    <stop offset="100%" stop-color="#ffaa44" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="sg2" x1="0" y1="185" x2="0" y2="0" gradientUnits="userSpaceOnUse">
+    <stop offset="0%"   stop-color="#cc3000" stop-opacity=".92"/>
+    <stop offset="25%"  stop-color="#ff4c00" stop-opacity=".88"/>
+    <stop offset="55%"  stop-color="#ff9200" stop-opacity=".58"/>
+    <stop offset="78%"  stop-color="#ffcc00" stop-opacity=".22"/>
+    <stop offset="100%" stop-color="#ffee88" stop-opacity="0"/>
+  </linearGradient>
+  <!-- tongue gradients — objectBoundingBox so each flame fades tip→base -->
+  <linearGradient id="g1" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0%"   stop-color="#881200"/>
+    <stop offset="20%"  stop-color="#cc2600" stop-opacity=".97"/>
+    <stop offset="50%"  stop-color="#ff6600" stop-opacity=".78"/>
+    <stop offset="75%"  stop-color="#ffb000" stop-opacity=".34"/>
+    <stop offset="100%" stop-color="#ffee66" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="g2" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0%"   stop-color="#ff5200"/>
+    <stop offset="40%"  stop-color="#ffcc00" stop-opacity=".92"/>
+    <stop offset="76%"  stop-color="#ffe566" stop-opacity=".42"/>
+    <stop offset="100%" stop-color="#fff8a0" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="g3" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0%"   stop-color="#ffe000"/>
+    <stop offset="48%"  stop-color="#ffee88" stop-opacity=".82"/>
+    <stop offset="100%" stop-color="#ffffff"  stop-opacity="0"/>
+  </linearGradient>
+  <filter id="bglow" x="-5%" y="-120%" width="110%" height="280%">
+    <feGaussianBlur stdDeviation="18"/>
+  </filter>
+
+  <!-- main tongue: hw=42, h=168, tip y=17 -->
+  <path id="mo" d="M-42 185C-50 158-30 114-9 79Q0 44 0 17Q0 44 9 79C30 114 50 158 42 185Z"    fill="url(#g1)"/>
+  <path id="mm" d="M-27 185C-32 165-19 131-6 104Q0 77 0 57Q0 77 6 104C19 131 32 165 27 185Z"    fill="url(#g2)"/>
+  <path id="mi" d="M-15 185C-18 172-11 150-3 132Q0 114 0 101Q0 114 3 132C11 150 18 172 15 185Z"  fill="url(#g3)"/>
+  <!-- fill tongue: hw=35, h=136, tip y=49 -->
+  <path id="fo" d="M-35 185C-41 163-25 128-8 99Q0 71 0 49Q0 71 8 99C25 128 41 163 35 185Z"      fill="url(#g1)"/>
+  <path id="fm" d="M-22 185C-26 169-16 142-5 120Q0 98 0 82Q0 98 5 120C16 142 26 169 22 185Z"    fill="url(#g2)"/>
+  <path id="fi" d="M-13 185C-15 174-9 156-3 142Q0 128 0 117Q0 128 3 142C9 156 15 174 13 185Z"    fill="url(#g3)"/>
+</defs>
+
+<!-- atmospheric heat glow -->
+<rect x="0" y="110" width="800" height="75" fill="#ff2200" opacity=".38" filter="url(#bglow)"/>
+<rect x="0" y="148" width="800" height="37" fill="#ff6600" opacity=".28" filter="url(#bglow)"/>
+
+<!--
+  Silhouette layer 1 — 800 px = 2 × 400 px tile.
+  Peaks (y≈128–138) at x=67,200,333,467,600,733 ; valleys (y≈162) at x=0,133,267,400,533,667,800.
+  Left edge y = right edge y = 162  →  seamless tiling.
+-->
+<path class="ms" d="
+  M   0 185 L   0 162
+  C  33 162,  54 138,  67 138
+  C  80 138, 120 162, 133 162
+  C 167 162, 187 132, 200 132
+  C 213 132, 253 162, 267 162
+  C 300 162, 320 138, 333 138
+  C 346 138, 387 162, 400 162
+  C 433 162, 454 138, 467 138
+  C 480 138, 520 162, 533 162
+  C 567 162, 587 132, 600 132
+  C 613 132, 653 162, 667 162
+  C 700 162, 720 138, 733 138
+  C 746 138, 787 162, 800 162
+  L 800 185 Z
+" fill="url(#sg1)"/>
+
+<!--
+  Silhouette layer 2 — taller mid-flame layer, 800 px.
+  Peaks (y≈88–95) at x=67,200,333,467,600,733 ; valleys (y≈138–140) at x=0,133,267,400,533,667,800.
+  Left edge y = right edge y = 138  →  seamless tiling.
+-->
+<path class="ms2" d="
+  M   0 185 L   0 138
+  C  33 138,  54  95,  67  95
+  C  80  95, 120 140, 133 140
+  C 167 140, 187  88, 200  88
+  C 213  88, 253 140, 267 140
+  C 300 140, 320  92, 333  92
+  C 346  92, 387 138, 400 138
+  C 433 138, 454  95, 467  95
+  C 480  95, 520 140, 533 140
+  C 567 140, 587  88, 600  88
+  C 613  88, 653 140, 667 140
+  C 700 140, 720  92, 733  92
+  C 746  92, 787 138, 800 138
+  L 800 185 Z
+" fill="url(#sg2)"/>
+
+<!-- solid dark base -->
+<rect x="0" y="175" width="800" height="10" fill="#3a0500"/>
+
+<!-- fill tongues: cx = 100, 200, 300, 400, 500, 600, 700 -->
+<g transform="translate(100,0)"><g class="fl"  style="animation-duration:.58s;animation-delay:.45s"><use href="#fo"/><use href="#fm"/><use href="#fi"/></g></g>
+<g transform="translate(200,0)"><g class="flr" style="animation-duration:.65s;animation-delay:.13s"><use href="#fo"/><use href="#fm"/><use href="#fi"/></g></g>
+<g transform="translate(300,0)"><g class="fl"  style="animation-duration:.45s;animation-delay:.38s"><use href="#fo"/><use href="#fm"/><use href="#fi"/></g></g>
+<g transform="translate(400,0)"><g class="flr" style="animation-duration:.55s;animation-delay:.28s"><use href="#fo"/><use href="#fm"/><use href="#fi"/></g></g>
+<g transform="translate(500,0)"><g class="fl"  style="animation-duration:.62s;animation-delay:.18s"><use href="#fo"/><use href="#fm"/><use href="#fi"/></g></g>
+<g transform="translate(600,0)"><g class="flr" style="animation-duration:.48s;animation-delay:.50s"><use href="#fo"/><use href="#fm"/><use href="#fi"/></g></g>
+<g transform="translate(700,0)"><g class="fl"  style="animation-duration:.42s;animation-delay:.08s"><use href="#fo"/><use href="#fm"/><use href="#fi"/></g></g>
+
+<!-- main tongues: cx = 50, 150, 250, 350, 450, 550, 650, 750 -->
+<g transform="translate( 50,0)"><g class="flr" style="animation-duration:.32s;animation-delay:0s">   <use href="#mo"/><use href="#mm"/><use href="#mi"/></g></g>
+<g transform="translate(150,0)"><g class="fl"  style="animation-duration:.40s;animation-delay:.22s"><use href="#mo"/><use href="#mm"/><use href="#mi"/></g></g>
+<g transform="translate(250,0)"><g class="flr" style="animation-duration:.52s;animation-delay:.55s"><use href="#mo"/><use href="#mm"/><use href="#mi"/></g></g>
+<g transform="translate(350,0)"><g class="fl"  style="animation-duration:.63s;animation-delay:.33s"><use href="#mo"/><use href="#mm"/><use href="#mi"/></g></g>
+<g transform="translate(450,0)"><g class="fl"  style="animation-duration:.36s;animation-delay:.42s"><use href="#mo"/><use href="#mm"/><use href="#mi"/></g></g>
+<g transform="translate(550,0)"><g class="flr" style="animation-duration:.44s;animation-delay:.15s"><use href="#mo"/><use href="#mm"/><use href="#mi"/></g></g>
+<g transform="translate(650,0)"><g class="fl"  style="animation-duration:.57s;animation-delay:.60s"><use href="#mo"/><use href="#mm"/><use href="#mi"/></g></g>
+<g transform="translate(750,0)"><g class="flr" style="animation-duration:.49s;animation-delay:.35s"><use href="#mo"/><use href="#mm"/><use href="#mi"/></g></g>
+</svg>

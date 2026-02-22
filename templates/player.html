@@ -194,7 +194,7 @@
 </script>
 {{else}}
 <p>Ingen kampe registreret endnu.</p>
-{{end}} {{if or (eq .Player.ID 8) (eq .Player.ID 5)}}
+{{end}} {{if hasEasterEgg .Player.EasterEggs "twintowers"}}
 <div id="airplane" style="display: none">🛩️</div>
 <div id="explosion" style="display: none">💥</div>
 

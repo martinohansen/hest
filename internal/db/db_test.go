@@ -23,7 +23,7 @@ func TestAddGameWithWeather(t *testing.T) {
 	// Add a game with weather
 	playedAt := time.Date(2025, 6, 15, 0, 0, 0, 0, time.UTC)
 	weather := "☀️ 22°"
-	if err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", weather); err != nil {
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", weather); err != nil {
 		t.Fatalf("adding game: %v", err)
 	}
 
@@ -57,7 +57,7 @@ func TestAddGameWithoutWeather(t *testing.T) {
 	}
 
 	playedAt := time.Date(2025, 6, 15, 0, 0, 0, 0, time.UTC)
-	if err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", ""); err != nil {
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", ""); err != nil {
 		t.Fatalf("adding game: %v", err)
 	}
 
@@ -91,7 +91,7 @@ func TestPlayerGamesWithWeather(t *testing.T) {
 
 	playedAt := time.Date(2025, 6, 15, 0, 0, 0, 0, time.UTC)
 	weather := "🌧️ 10°"
-	if err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", weather); err != nil {
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", weather); err != nil {
 		t.Fatalf("adding game: %v", err)
 	}
 
@@ -126,11 +126,11 @@ func TestGamesWithoutWeather(t *testing.T) {
 	playedAt := time.Date(2025, 6, 15, 0, 0, 0, 0, time.UTC)
 
 	// Game without weather
-	if err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", ""); err != nil {
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", ""); err != nil {
 		t.Fatalf("adding game: %v", err)
 	}
 	// Game with weather
-	if err := store.AddGame(playedAt, []int{1, 2}, 2, 1, "test", "☀️ 22°"); err != nil {
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 2, 1, "test", "☀️ 22°"); err != nil {
 		t.Fatalf("adding game: %v", err)
 	}
 
@@ -163,7 +163,7 @@ func TestUpdateGameWeather(t *testing.T) {
 	}
 
 	playedAt := time.Date(2025, 6, 15, 0, 0, 0, 0, time.UTC)
-	if err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", ""); err != nil {
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", ""); err != nil {
 		t.Fatalf("adding game: %v", err)
 	}
 
@@ -206,7 +206,7 @@ func TestGetGameByID(t *testing.T) {
 
 	playedAt := time.Date(2025, 6, 15, 0, 0, 0, 0, time.UTC)
 	weather := "☀️ 22°"
-	if err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", weather); err != nil {
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", weather); err != nil {
 		t.Fatalf("adding game: %v", err)
 	}
 

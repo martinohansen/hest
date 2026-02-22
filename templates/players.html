@@ -1,0 +1,24 @@
+{{define "content"}}
+<div class="stack">
+  <h1>Spillere</h1>
+  {{if .Players}}
+  <form action="/players/update" method="post" class="stack">
+    <div class="stack">
+      {{range .Players}}
+      <div style="display: flex; gap: var(--spacing-md); align-items: center;">
+        <input type="hidden" name="id" value="{{.ID}}" />
+        <input type="text" name="emoji" value="{{.Emoji}}" style="width: 3.5em; text-align: center; flex-shrink: 0;" />
+        <input type="text" name="name" value="{{.Name}}" required style="flex: 1; min-width: 0;" />
+        <input type="text" name="easter_eggs" value="{{.EasterEggs}}" style="flex: 1; min-width: 0;" placeholder="easter eggs" />
+      </div>
+      {{end}}
+    </div>
+    <div class="actions">
+      <button type="submit">Gem</button>
+    </div>
+  </form>
+  {{else}}
+  <p><em>Ingen spillere endnu.</em></p>
+  {{end}}
+</div>
+{{end}}

@@ -245,15 +245,21 @@ func (a *App) saveGameCommon(w http.ResponseWriter, r *http.Request) ([]Player, 
 		return nil, time.Time{}, false
 	}
 
-	weatherStr, err := weather.Fetch(playedAt, nil)
+	gameID, err := a.store.AddGame(playedAt, uniqueIDs, winnerID, secondID, username, "")
 	if err != nil {
-		slog.Warn("could not fetch weather", "error", err)
-	}
-
-	if err := a.store.AddGame(playedAt, uniqueIDs, winnerID, secondID, username, weatherStr); err != nil {
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return nil, time.Time{}, false
 	}
+	go func() {
+		w, err := weather.Fetch(playedAt, nil)
+		if err != nil {
+			slog.Warn("could not fetch weather", "error", err)
+			return
+		}
+		if err := a.store.UpdateGameWeather(int(gameID), w); err != nil {
+			slog.Warn("could not update game weather", "game_id", gameID, "error", err)
+		}
+	}()
 
 	return players, playedAt, true
 }

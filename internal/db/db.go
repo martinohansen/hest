@@ -15,14 +15,15 @@ type Store struct {
 }
 
 type Player struct {
-	ID      int
-	Name    string
-	Emoji   string
-	Games   int
-	Wins    int
-	Seconds int
-	Points  int
-	PPG     float64
+	ID         int
+	Name       string
+	Emoji      string
+	EasterEggs string
+	Games      int
+	Wins       int
+	Seconds    int
+	Points     int
+	PPG        float64
 }
 
 type Game struct {
@@ -97,6 +98,19 @@ func migrate(db *sql.DB) error {
 			return err
 		}
 	}
+
+	// Add easter_eggs column to players table if it doesn't exist.
+	var easterEggsCount int
+	err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('players') WHERE name='easter_eggs'`).Scan(&easterEggsCount)
+	if err != nil {
+		return err
+	}
+	if easterEggsCount == 0 {
+		if _, err := db.Exec(`ALTER TABLE players ADD COLUMN easter_eggs TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -220,7 +234,7 @@ func normalizedDateRange(filter *DateRange) (string, string, bool) {
 // scanPlayer scans a player row from the playerTotalsQuery result.
 func scanPlayer(scanner interface{ Scan(...any) error }) (Player, error) {
 	var p Player
-	err := scanner.Scan(&p.ID, &p.Name, &p.Emoji, &p.Games, &p.Wins, &p.Seconds, &p.Points, &p.PPG)
+	err := scanner.Scan(&p.ID, &p.Name, &p.Emoji, &p.EasterEggs, &p.Games, &p.Wins, &p.Seconds, &p.Points, &p.PPG)
 	return p, err
 }
 
@@ -297,7 +311,7 @@ JOIN players second ON second.id = g.second_id
 func (s *Store) loadGameParticipants(gameIDs []int) (map[int][]Player, error) {
 	placeholders, args := buildPlaceholders(gameIDs)
 	rows, err := s.db.Query(fmt.Sprintf(`
-SELECT gp.game_id, p.id, p.name, p.emoji
+SELECT gp.game_id, p.id, p.name, p.emoji, COALESCE(p.easter_eggs, '')
 FROM game_players gp
 JOIN players p ON p.id = gp.player_id
 WHERE gp.game_id IN (%s)
@@ -314,7 +328,7 @@ ORDER BY gp.game_id, p.name
 			gameID int
 			p      Player
 		)
-		if err := rows.Scan(&gameID, &p.ID, &p.Name, &p.Emoji); err != nil {
+		if err := rows.Scan(&gameID, &p.ID, &p.Name, &p.Emoji, &p.EasterEggs); err != nil {
 			return nil, err
 		}
 		participantMap[gameID] = append(participantMap[gameID], p)
@@ -717,15 +731,15 @@ func validateGameParticipants(participantIDs []int, winnerID, secondID int) erro
 	return nil
 }
 
-func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, secondID int, createdBy string, weather string) error {
+func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, secondID int, createdBy string, weather string) (int64, error) {
 	uniqueIDs := Dedupe(participantIDs)
 	if err := validateGameParticipants(uniqueIDs, winnerID, secondID); err != nil {
-		return err
+		return 0, err
 	}
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer func() {
 		if err != nil {
@@ -735,28 +749,28 @@ func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, seco
 
 	res, err := tx.Exec(`INSERT INTO games (played_at, winner_id, second_id, created_by, weather) VALUES (?, ?, ?, ?, ?)`, playedAt, winnerID, secondID, createdBy, weather)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	gameID, err := res.LastInsertId()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	stmt, err := tx.Prepare(`INSERT INTO game_players (game_id, player_id) VALUES (?, ?)`)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer stmt.Close()
 
 	for _, pid := range uniqueIDs {
 		if _, err = stmt.Exec(gameID, pid); err != nil {
-			return err
+			return 0, err
 		}
 	}
 
 	err = tx.Commit()
-	return err
+	return gameID, err
 }
 
 // GamesWithoutWeather returns all games that have no weather data.
@@ -778,6 +792,31 @@ SELECT id, played_at FROM games WHERE weather = '' ORDER BY played_at ASC
 		games = append(games, g)
 	}
 	return games, rows.Err()
+}
+
+// UpdatePlayer updates a player's name, emoji, and easter_eggs fields.
+func (s *Store) UpdatePlayer(id int, name, emoji, easterEggs string) error {
+	_, err := s.db.Exec(`UPDATE players SET name = ?, emoji = ?, easter_eggs = ? WHERE id = ?`, name, emoji, easterEggs, id)
+	return err
+}
+
+// ListPlayersBase returns all players with only base fields (id, name, emoji, easter_eggs).
+func (s *Store) ListPlayersBase() ([]Player, error) {
+	rows, err := s.db.Query(`SELECT id, name, COALESCE(emoji, ''), COALESCE(easter_eggs, '') FROM players ORDER BY name ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var players []Player
+	for rows.Next() {
+		var p Player
+		if err := rows.Scan(&p.ID, &p.Name, &p.Emoji, &p.EasterEggs); err != nil {
+			return nil, err
+		}
+		players = append(players, p)
+	}
+	return players, rows.Err()
 }
 
 // UpdateGameWeather sets the weather string for a specific game.
@@ -1028,6 +1067,7 @@ seconds_count AS (
 )
 SELECT p.id, p.name,
 	COALESCE(p.emoji, '') AS emoji,
+	COALESCE(p.easter_eggs, '') AS easter_eggs,
 	COALESCE(gc.games, 0) AS games,
 	COALESCE(w.wins, 0) AS wins,
 	COALESCE(s.seconds, 0) AS seconds,

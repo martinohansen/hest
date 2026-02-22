@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/carlmjohnson/versioninfo"
 )
@@ -22,6 +23,17 @@ func render(tplName string, w http.ResponseWriter, data any, files ...string) er
 		"add":      func(a, b int) int { return a + b },
 		"subtract": func(a, b int) int { return a - b },
 		"version":  func() string { return versioninfo.Short() },
+		"hasEasterEgg": func(easterEggs, name string) bool {
+			if easterEggs == "" {
+				return false
+			}
+			for _, e := range strings.Split(easterEggs, ",") {
+				if strings.TrimSpace(e) == name {
+					return true
+				}
+			}
+			return false
+		},
 	}
 	tpl, err := template.New(filepath.Base(files[0])).Funcs(funcs).ParseFS(templateFS, files...)
 	if err != nil {

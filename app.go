@@ -36,7 +36,9 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("/seasons", a.handleSeasons)
 	mux.HandleFunc("/new", a.handleNewGame)
 	mux.HandleFunc("/new/score", a.handleScoreGame)
-	mux.HandleFunc("/players", a.handleAddPlayer)
+	mux.HandleFunc("/players/add", a.handleAddPlayer)
+	mux.HandleFunc("/players/update", a.handleUpdatePlayer)
+	mux.HandleFunc("/players", a.handlePlayers)
 	mux.HandleFunc("/player", a.handlePlayerDetail)
 	mux.HandleFunc("/h2h", a.handleH2H)
 	mux.HandleFunc("/rules", a.handleRules)
@@ -78,6 +80,18 @@ func (a *App) listGames(filter *db.DateRange) ([]Game, error) {
 	result := make([]Game, len(games))
 	for i, g := range games {
 		result[i] = Game(g)
+	}
+	return result, nil
+}
+
+func (a *App) listPlayersBase() ([]Player, error) {
+	players, err := a.store.ListPlayersBase()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]Player, len(players))
+	for i, p := range players {
+		result[i] = Player(p)
 	}
 	return result, nil
 }
