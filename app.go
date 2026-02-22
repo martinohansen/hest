@@ -31,6 +31,8 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("/", a.handleLeaderboard)
 	mux.HandleFunc("/games", a.handleGames)
 	mux.HandleFunc("/game", a.handleGameDetail)
+	mux.HandleFunc("/game/edit", a.handleGameEdit)
+	mux.HandleFunc("/game/update", a.handleUpdateGame)
 	mux.HandleFunc("/games/save", a.handleSaveGame)
 	mux.HandleFunc("/games/save-and-new", a.handleSaveAndNewGame)
 	mux.HandleFunc("/seasons", a.handleSeasons)
@@ -131,6 +133,10 @@ func parseIDs(values []string) ([]int, error) {
 // Return player ID from string or error
 func parsePlayer(id string) (int, error) {
 	return strconv.Atoi(strings.TrimSpace(id))
+}
+
+func parseGameID(raw string) (int, error) {
+	return strconv.Atoi(strings.TrimSpace(raw))
 }
 
 func validatePlacement(winnerID, secondID int, participantIDs []int) string {

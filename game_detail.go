@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"strconv"
 )
 
 type gameDetailView struct {
@@ -31,7 +30,7 @@ func (a *App) handleGameDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gameID, err := strconv.Atoi(gameIDStr)
+	gameID, err := parseGameID(gameIDStr)
 	if err != nil {
 		http.Error(w, "invalid game id", http.StatusBadRequest)
 		return

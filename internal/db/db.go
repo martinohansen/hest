@@ -773,6 +773,56 @@ func (s *Store) AddGame(playedAt time.Time, participantIDs []int, winnerID, seco
 	return gameID, err
 }
 
+// UpdateGame updates game date, placements and participants while preserving existing weather.
+func (s *Store) UpdateGame(gameID int, playedAt time.Time, participantIDs []int, winnerID, secondID int) error {
+	uniqueIDs := Dedupe(participantIDs)
+	if err := validateGameParticipants(uniqueIDs, winnerID, secondID); err != nil {
+		return err
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	res, err := tx.Exec(`UPDATE games SET played_at = ?, winner_id = ?, second_id = ? WHERE id = ?`, playedAt, winnerID, secondID, gameID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	if _, err = tx.Exec(`DELETE FROM game_players WHERE game_id = ?`, gameID); err != nil {
+		return err
+	}
+
+	stmt, err := tx.Prepare(`INSERT INTO game_players (game_id, player_id) VALUES (?, ?)`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, participantID := range uniqueIDs {
+		if _, err = stmt.Exec(gameID, participantID); err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	return err
+}
+
 // GamesWithoutWeather returns all games that have no weather data.
 func (s *Store) GamesWithoutWeather() ([]Game, error) {
 	rows, err := s.db.Query(`

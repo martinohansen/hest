@@ -243,3 +243,59 @@ func TestGetGameByID(t *testing.T) {
 		t.Error("expected game not to be found")
 	}
 }
+
+func TestUpdateGamePreservesWeatherAndUpdatesPlacements(t *testing.T) {
+	store, err := Open(":memory:")
+	if err != nil {
+		t.Fatalf("opening db: %v", err)
+	}
+	defer store.Close()
+
+	if err := store.AddPlayer("Alice"); err != nil {
+		t.Fatalf("adding player: %v", err)
+	}
+	if err := store.AddPlayer("Bob"); err != nil {
+		t.Fatalf("adding player: %v", err)
+	}
+	if err := store.AddPlayer("Carol"); err != nil {
+		t.Fatalf("adding player: %v", err)
+	}
+
+	playedAt := time.Date(2025, 6, 15, 0, 0, 0, 0, time.UTC)
+	weather := "☀️ 22°"
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", weather); err != nil {
+		t.Fatalf("adding game: %v", err)
+	}
+
+	updatedAt := time.Date(2025, 6, 18, 0, 0, 0, 0, time.UTC)
+	if err := store.UpdateGame(1, updatedAt, []int{2, 3}, 2, 3); err != nil {
+		t.Fatalf("updating game: %v", err)
+	}
+
+	game, ok, err := store.GetGameByID(1)
+	if err != nil {
+		t.Fatalf("getting game: %v", err)
+	}
+	if !ok {
+		t.Fatal("expected game to exist")
+	}
+
+	if !game.PlayedAt.Equal(updatedAt) {
+		t.Errorf("expected played_at %v, got %v", updatedAt, game.PlayedAt)
+	}
+	if game.Winner.ID != 2 {
+		t.Errorf("expected winner ID 2, got %d", game.Winner.ID)
+	}
+	if game.Second.ID != 3 {
+		t.Errorf("expected second ID 3, got %d", game.Second.ID)
+	}
+	if len(game.Participants) != 2 {
+		t.Fatalf("expected 2 participants, got %d", len(game.Participants))
+	}
+	if game.Participants[0].ID != 2 || game.Participants[1].ID != 3 {
+		t.Errorf("expected participants [2,3], got [%d,%d]", game.Participants[0].ID, game.Participants[1].ID)
+	}
+	if game.Weather != weather {
+		t.Errorf("expected weather %q to be preserved, got %q", weather, game.Weather)
+	}
+}

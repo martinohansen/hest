@@ -1,0 +1,63 @@
+{{define "content"}}
+<div class="stack">
+  <h1>Rediger kamp #{{.GameID}}</h1>
+  {{if .Error}}
+  <p class="error">{{.Error}}</p>
+  {{end}}
+
+  <form action="/game/update" method="post" class="stack">
+    <input type="hidden" name="game_id" value="{{.GameID}}" />
+    {{if .SeasonExplicit}}
+    <input type="hidden" name="season" value="{{.SeasonID}}" />
+    {{end}}
+
+    <label class="stack">
+      <span>Dato</span>
+      <input type="date" name="played_at" value="{{.PlayedAt}}" />
+    </label>
+
+    <div class="stack">
+      <p>Deltagere</p>
+      <div class="list">
+        {{range .Players}}
+        <label class="list-item">
+          <input type="checkbox" name="player_id" value="{{.ID}}" {{if .Selected}}checked{{end}} />
+          <span>{{.Emoji}}</span>
+          {{.Name}}
+        </label>
+        {{end}}
+      </div>
+    </div>
+
+    <div class="score-selects">
+      <label class="stack">
+        <span>Vinder</span>
+        <select name="winner_id">
+          <option value="" {{if eq .WinnerID 0}}selected{{end}}>Vælg...</option>
+          {{range .Players}}
+          <option value="{{.ID}}" {{if eq $.WinnerID .ID}}selected{{end}}>
+            {{.Emoji}} {{.Name}}
+          </option>
+          {{end}}
+        </select>
+      </label>
+
+      <label class="stack">
+        <span>2. plads</span>
+        <select name="second_id">
+          <option value="" {{if eq .SecondID 0}}selected{{end}}>Vælg...</option>
+          {{range .Players}}
+          <option value="{{.ID}}" {{if eq $.SecondID .ID}}selected{{end}}>
+            {{.Emoji}} {{.Name}}
+          </option>
+          {{end}}
+        </select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="submit">Gem ændringer</button>
+    </div>
+  </form>
+</div>
+{{end}}
