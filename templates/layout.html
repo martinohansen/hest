@@ -52,22 +52,9 @@
     </div>
     <script>
       // Fire Horse year easter egg — 丙午 occurs every 60 years: 1906, 1966,
-      // 2026 etc. Returns a function that reveals the fire on first call, null
-      // if not Fire Horse year.
-      const showFire = (function () {
-        const year = new Date().getFullYear();
-        if ((year - 1906) % 60 !== 0) return null;
-        return function () {
-          if (document.getElementById("fire-sea")) return;
-          document.body.classList.add("fire-horse-year");
-          const img = document.createElement("img");
-          img.id = "fire-sea";
-          img.src = "/static/fire.svg";
-          img.alt = "";
-          img.setAttribute("aria-hidden", "true");
-          document.body.appendChild(img);
-        };
-      })();
+      // 2026 etc. On click, toggles the horse icon to 🔥 (and back).
+      const isFireHorseYear = (new Date().getFullYear() - 1906) % 60 === 0;
+      let fireHorseActive = false;
 
       // Easter egg: Track horse clicks
       let horseClickCount = 0;
@@ -86,7 +73,11 @@
             audio.play();
           }
 
-          if (showFire) showFire();
+          if (isFireHorseYear) {
+            const icon = document.getElementById("horse-icon");
+            fireHorseActive = !fireHorseActive;
+            icon.textContent = fireHorseActive ? "🔥" : "🐴";
+          }
 
           // Horse roll
           horseClickCount++;
