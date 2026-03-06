@@ -244,15 +244,13 @@ TABLES Optimized for compact display with proper spacing hierarchy.
   padding-right: var(--spacing-sm);
 }
 
-/* Add padding to name column links for proper rank indicator spacing */
-.table .name a {
-  padding-left: var(--spacing-xs);
-  padding-right: var(--spacing-xs);
+/* Add padding to table links for proper hover box sizing */
+.table td a {
+  padding: 2px var(--spacing-xs);
 }
 
 .table .participants a {
-  padding-left: 2px;
-  padding-right: 2px;
+  padding: 2px;
 }
 
 .table .num {
