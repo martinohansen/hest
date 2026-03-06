@@ -436,10 +436,32 @@ PLAYER STATS
 HEAD-TO-HEAD (H2H) COMPONENTS
 */
 .h2h-selects,
-.score-selects {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+.placement-badge {
+  cursor: pointer;
+  user-select: none;
+}
+
+.placement-badge .placement-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.badge-rank-icon {
+  font-size: 1.1em;
+  line-height: 1;
+  width: 1.4em;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.placement-badge--winner {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.placement-badge--second {
+  border-color: #9ca3af;
+  background: #f4f4f5;
 }
 
 .h2h-results {

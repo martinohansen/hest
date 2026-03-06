@@ -17,42 +17,19 @@
     </label>
 
     <div class="stack">
-      <p>Deltagere</p>
-      <div class="list">
+      <p>Klik på en spiller for at sætte placering:</p>
+      <div class="list" id="placement-list">
         {{range .Players}}
-        <label class="list-item">
-          <input type="checkbox" name="player_id" value="{{.ID}}" {{if .Selected}}checked{{end}} />
+        <div class="list-item placement-badge" data-player-id="{{.ID}}" tabindex="0" role="button">
+          <input type="checkbox" name="player_id" value="{{.ID}}" {{if .Selected}}checked{{end}} onclick="event.stopPropagation()" />
           <span>{{.Emoji}}</span>
-          {{.Name}}
-        </label>
+          <span class="placement-name">{{.Name}}</span>
+          <span class="badge-rank-icon"></span>
+        </div>
         {{end}}
       </div>
-    </div>
-
-    <div class="score-selects">
-      <label class="stack">
-        <span>Vinder</span>
-        <select name="winner_id">
-          <option value="" {{if eq .WinnerID 0}}selected{{end}}>Vælg...</option>
-          {{range .Players}}
-          <option value="{{.ID}}" {{if eq $.WinnerID .ID}}selected{{end}}>
-            {{.Emoji}} {{.Name}}
-          </option>
-          {{end}}
-        </select>
-      </label>
-
-      <label class="stack">
-        <span>2. plads</span>
-        <select name="second_id">
-          <option value="" {{if eq .SecondID 0}}selected{{end}}>Vælg...</option>
-          {{range .Players}}
-          <option value="{{.ID}}" {{if eq $.SecondID .ID}}selected{{end}}>
-            {{.Emoji}} {{.Name}}
-          </option>
-          {{end}}
-        </select>
-      </label>
+      <input type="hidden" name="winner_id" id="input-winner-id" value="{{if .WinnerID}}{{.WinnerID}}{{end}}" />
+      <input type="hidden" name="second_id" id="input-second-id" value="{{if .SecondID}}{{.SecondID}}{{end}}" />
     </div>
 
     <div class="actions">
@@ -60,4 +37,73 @@
     </div>
   </form>
 </div>
+<script>
+(function () {
+  var list = document.getElementById("placement-list");
+  if (!list) return;
+  var winnerInput = document.getElementById("input-winner-id");
+  var secondInput = document.getElementById("input-second-id");
+  var states = {};
+
+  function updateBadge(badge, state) {
+    var icon = badge.querySelector(".badge-rank-icon");
+    badge.classList.remove("placement-badge--winner", "placement-badge--second");
+    if (state === 1) {
+      badge.classList.add("placement-badge--winner");
+      icon.textContent = "🥇";
+    } else if (state === 2) {
+      badge.classList.add("placement-badge--second");
+      icon.textContent = "🥈";
+    } else {
+      icon.textContent = "";
+    }
+  }
+
+  list.querySelectorAll(".placement-badge").forEach(function (badge) {
+    var id = badge.dataset.playerId;
+    var initWinner = winnerInput ? winnerInput.value : "";
+    var initSecond = secondInput ? secondInput.value : "";
+    var state = 0;
+    if (id === initWinner && initWinner && initWinner !== "0") state = 1;
+    if (id === initSecond && initSecond && initSecond !== "0") state = 2;
+    states[id] = state;
+    updateBadge(badge, state);
+
+    function handleActivate() {
+      var current = states[id] || 0;
+      if (current === 1) {
+        states[id] = 0;
+        if (winnerInput) winnerInput.value = "";
+        updateBadge(badge, 0);
+      } else if (current === 2) {
+        states[id] = 0;
+        if (secondInput) secondInput.value = "";
+        updateBadge(badge, 0);
+      } else {
+        var winnerTaken = Object.keys(states).some(function (k) { return states[k] === 1; });
+        if (!winnerTaken) {
+          states[id] = 1;
+          if (winnerInput) winnerInput.value = id;
+          updateBadge(badge, 1);
+        } else {
+          var secondTaken = Object.keys(states).some(function (k) { return states[k] === 2; });
+          if (!secondTaken) {
+            states[id] = 2;
+            if (secondInput) secondInput.value = id;
+            updateBadge(badge, 2);
+          }
+        }
+      }
+    }
+
+    badge.addEventListener("click", handleActivate);
+    badge.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleActivate();
+      }
+    });
+  });
+})();
+</script>
 {{end}}
