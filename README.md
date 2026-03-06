@@ -19,6 +19,14 @@ Just run it, it will create a [SQLite](https://www.sqlite.org/) database in the 
 HEST_PASSWORD=<password> hest
 ```
 
+## Screenshots
+
+This is how it looks in action:
+
+Leaderboard | Player | Add game | H2H |
+:----------:|:------:|:--------:|:---:|
+<img width="723" height="750" alt="Leaderboard" src="https://github.com/user-attachments/assets/b67b1c74-a67d-447a-8f21-9984ebd4e9f2" /> | <img width="715" height="816" alt="Player" src="https://github.com/user-attachments/assets/085b107e-fdf1-4383-a81a-8906a35191f4" /> | <img width="718" height="824" alt="Add game" src="https://github.com/user-attachments/assets/a1541a67-f880-46b2-9176-e553dc29cfd2" /> | <img width="718" height="809" alt="H2H" src="https://github.com/user-attachments/assets/6018e421-a023-4512-a2bc-5a4c78d9456f" />
+
 ## Contributing
 
 Pull requests are welcome.
