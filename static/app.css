@@ -183,7 +183,9 @@ TABLES Optimized for compact display with proper spacing hierarchy.
 */
 .table {
   border-collapse: collapse;
-  width: 100%;
+  width: calc(100% + 2 * var(--spacing-lg));
+  margin-left: calc(-1 * var(--spacing-lg));
+  margin-right: calc(-1 * var(--spacing-lg));
 }
 
 .table th,
@@ -193,11 +195,28 @@ TABLES Optimized for compact display with proper spacing hierarchy.
   text-align: left;
 }
 
+.table th:first-child,
+.table td:first-child {
+  padding-left: calc(var(--spacing-lg) + 10px);
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: calc(var(--spacing-lg) + 10px);
+}
+
+.table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
 /* Table headers */
 .table th {
   background: transparent;
   font-weight: 700;
   color: var(--muted);
+  padding-top: 0;
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .table th.sortable {
@@ -246,6 +265,12 @@ TABLES Optimized for compact display with proper spacing hierarchy.
 
 .table .num + .num {
   padding-left: 6px;
+}
+
+/* Leaderboard: bold points column */
+#leaderboard td:nth-child(6) {
+  font-weight: 600;
+  color: var(--accent);
 }
 
 /*
