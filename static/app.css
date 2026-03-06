@@ -671,6 +671,30 @@ FOOTER
 }
 
 /*
+PROSE (rules page)
+*/
+.prose {
+  max-width: 60ch;
+  line-height: 1.6;
+}
+
+.prose p,
+.prose ol,
+.prose li {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+}
+
+.prose ol {
+  padding-left: var(--spacing-xl);
+}
+
+.prose li > ol {
+  margin-top: var(--spacing-xs);
+  margin-bottom: 0;
+}
+
+/*
 UTILITY CLASSES
 */
 .nowrap {
