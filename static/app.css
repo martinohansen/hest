@@ -433,7 +433,25 @@ PLAYER STATS
 /*
 HEAD-TO-HEAD (H2H) COMPONENTS
 */
-.h2h-selects,
+.h2h-selects {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.h2h-selects label {
+  flex: 1;
+  min-width: 0;
+}
+
+.h2h-selects select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  box-sizing: border-box;
+}
+
 .placement-badge {
   cursor: pointer;
   user-select: none;
