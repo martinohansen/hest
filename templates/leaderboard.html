@@ -38,7 +38,7 @@
   </thead>
   <tbody>
     {{if .Players}} {{range $p := .Players}}
-    <tr>
+    <tr data-player-id="{{$p.ID}}">
       <td class="rank rank-with-arrow">
         <span class="rank-number">{{$p.OriginalRank}}</span>{{if gt $p.RankChange 0}}<span class="rank-arrow rank-up">▲</span>{{else if lt $p.RankChange 0}}<span class="rank-arrow rank-down">▼</span>{{end}}
       </td>
@@ -47,7 +47,7 @@
       <td class="num">{{$p.Wins}}</td>
       <td class="num">{{$p.Seconds}}</td>
       <td class="num">{{$p.Points}}</td>
-      <td class="num ppg-col">{{printf "%.2f" $p.PPG}}<button class="h2h-pick" data-player-id="{{$p.ID}}" title="Sammenlign H2H" aria-label="Vælg {{$p.Name}} til H2H">⚔️</button></td>
+      <td class="num">{{printf "%.2f" $p.PPG}}</td>
     </tr>
     {{end}} {{else}}
     <tr>

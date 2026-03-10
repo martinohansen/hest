@@ -245,7 +245,6 @@ TABLES Optimized for compact display with proper spacing hierarchy.
 }
 
 .table td.ppg-col {
-  position: relative;
 }
 
 /* Add padding to table links for proper hover box sizing */
@@ -723,8 +722,12 @@ FOOTER
 PROSE (rules page)
 */
 .prose {
-  max-width: 60ch;
   line-height: 1.6;
+}
+
+.shortcuts-table td:first-child,
+.shortcuts-table th:first-child {
+  white-space: nowrap;
 }
 
 .prose p,
@@ -857,43 +860,20 @@ body.page-roll {
 }
 
 /*
-H2H PICK BUTTON (leaderboard hover-to-compare)
+H2H SHIFT-PICK (hold Shift to enter picking mode on the leaderboard)
 */
-.h2h-pick {
-  position: absolute;
-  right: calc((var(--spacing-lg) + 10px) / 2);
-  top: 50%;
-  transform: translate(50%, -50%);
-  padding: 0;
-  font-size: 13px;
-  line-height: 1;
-  background: none;
-  border: none;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s;
+
+/* Rows become clickable targets — cursor is the ⚔️ emoji */
+.table.h2h-picking tbody tr {
+  cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='26' font-size='26'>⚔️</text></svg>") 16 16, crosshair;
 }
 
-/* Row hover (no selection active) */
-.table tr:hover .h2h-pick {
-  opacity: 0.4;
+.table.h2h-picking tbody tr:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
-/* When picking mode active: show all sword buttons at low opacity */
-.table.h2h-picking .h2h-pick {
-  opacity: 0.4;
-}
-
-/* Hovering the icon itself while picking: full opacity */
-.table.h2h-picking tr:not(.h2h-selected) .h2h-pick:hover {
-  opacity: 1;
-}
-
-/* Selected row */
-.table tr.h2h-selected {
-  background: #f0f0f0;
-}
-
-.table tr.h2h-selected .h2h-pick {
-  opacity: 1;
+/* Selected row — stays highlighted even when not hovered */
+.table tbody tr.h2h-selected,
+.table tbody tr.h2h-selected:hover {
+  background: #e8e8e8;
 }

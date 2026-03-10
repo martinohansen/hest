@@ -44,6 +44,7 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("/player", a.handlePlayerDetail)
 	mux.HandleFunc("/h2h", a.handleH2H)
 	mux.HandleFunc("/rules", a.handleRules)
+	mux.HandleFunc("/shortcuts", a.handleShortcuts)
 	return mux
 }
 

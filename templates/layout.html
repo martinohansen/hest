@@ -45,6 +45,8 @@
       <footer class="footer">
         <span><a href="/rules">Regler</a></span>
         <span class="footer-sep">|</span>
+        <span><a href="/shortcuts">Genveje</a></span>
+        <span class="footer-sep">|</span>
         <span><a href="https://github.com/martinohansen/hest">GitHub</a></span>
         <span class="footer-version">{{version}}</span>
       </footer>
@@ -108,29 +110,59 @@
           });
       });
 
-      // H2H quick-pick: click ⚔ on a leaderboard row to select player 1,
-      // then click ⚔ on another row to navigate to /h2h?player1=X&player2=Y.
+      // H2H shift-pick: hold Shift to enter picking mode, click a row to
+      // select player 1 (emoji → ⚔️), click another row to go to /h2h.
+      // Escape or releasing Shift (before picking) cancels.
       (function () {
         let selectedId = null;
         let selectedRow = null;
 
-        document.addEventListener("click", function (e) {
-          const btn = e.target.closest(".h2h-pick");
-          if (!btn) return;
-          e.preventDefault();
+        function getTable() {
+          return document.getElementById("leaderboard");
+        }
 
-          const id = btn.dataset.playerId;
-          const row = btn.closest("tr");
-          const table = btn.closest("table");
+        function enterPickingMode() {
+          const t = getTable();
+          if (t) t.classList.add("h2h-picking");
+        }
+
+        function exitPickingMode() {
+          const t = getTable();
+          if (t) t.classList.remove("h2h-picking");
+          if (selectedRow) selectedRow.classList.remove("h2h-selected");
+          selectedId = null;
+          selectedRow = null;
+        }
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Shift" && !e.repeat) enterPickingMode();
+          if (e.key === "Escape") exitPickingMode();
+        });
+
+        document.addEventListener("keyup", function (e) {
+          if (e.key === "Shift") exitPickingMode();
+        });
+
+        document.addEventListener("click", function (e) {
+          const t = getTable();
+          if (!t || !t.classList.contains("h2h-picking")) return;
+
+          const row = e.target.closest("#leaderboard tbody tr[data-player-id]");
+          if (!row) return;
+
+          // Require shift to make the first pick; second pick works without it
+          if (!selectedId && !e.shiftKey) return;
+
+          e.preventDefault();
+          const id = row.dataset.playerId;
 
           if (!selectedId) {
             selectedId = id;
             selectedRow = row;
             row.classList.add("h2h-selected");
-            if (table) table.classList.add("h2h-picking");
           } else if (id === selectedId) {
-            selectedRow.classList.remove("h2h-selected");
-            if (table) table.classList.remove("h2h-picking");
+            // Click same row again = deselect
+            row.classList.remove("h2h-selected");
             selectedId = null;
             selectedRow = null;
           } else {
