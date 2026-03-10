@@ -28,7 +28,7 @@ func main() {
 	}
 
 	slog.Info("listening on http://localhost:"+port,
-		"version", versioninfo.Revision,
+		"version", versioninfo.Revision[:7],
 	)
 	if err := http.ListenAndServe(":"+port, app.routes()); err != nil {
 		log.Fatal(err)
