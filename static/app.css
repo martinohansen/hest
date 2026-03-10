@@ -688,6 +688,7 @@ SEASONS
 FOOTER
 */
 .footer {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -710,6 +711,12 @@ FOOTER
 
 .footer-sep {
   color: var(--muted);
+}
+
+.footer-version {
+  position: absolute;
+  right: var(--spacing-lg);
+  color: var(--bg);
 }
 
 /*
