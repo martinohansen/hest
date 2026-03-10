@@ -4,7 +4,6 @@
     <tr>
       <th class="rank"><abbr title="Placering">#</abbr></th>
       <th class="name"></th>
-      <th class="h2h-col"></th>
       <th class="num sortable"
           hx-get="/?sort=games&dir={{if and (eq .SortBy "games") (eq .SortDir "desc")}}asc{{else}}desc{{end}}{{if .SeasonExplicit}}&season={{.SeasonID}}{{end}}"
           hx-target="#leaderboard"
@@ -44,16 +43,15 @@
         <span class="rank-number">{{$p.OriginalRank}}</span>{{if gt $p.RankChange 0}}<span class="rank-arrow rank-up">▲</span>{{else if lt $p.RankChange 0}}<span class="rank-arrow rank-down">▼</span>{{end}}
       </td>
       <td class="name"><a href="/player?id={{$p.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}">{{$p.Emoji}} {{$p.Name}}</a></td>
-      <td class="h2h-col"><button class="h2h-pick" data-player-id="{{$p.ID}}" title="Sammenlign H2H" aria-label="Vælg {{$p.Name}} til H2H">⚔️</button></td>
       <td class="num">{{$p.Games}}</td>
       <td class="num">{{$p.Wins}}</td>
       <td class="num">{{$p.Seconds}}</td>
       <td class="num">{{$p.Points}}</td>
-      <td class="num">{{printf "%.2f" $p.PPG}}</td>
+      <td class="num ppg-col">{{printf "%.2f" $p.PPG}}<button class="h2h-pick" data-player-id="{{$p.ID}}" title="Sammenlign H2H" aria-label="Vælg {{$p.Name}} til H2H">⚔️</button></td>
     </tr>
     {{end}} {{else}}
     <tr>
-      <td colspan="8">Ingen resultater endnu.</td>
+      <td colspan="7">Ingen resultater endnu.</td>
     </tr>
     {{end}}
   </tbody>
