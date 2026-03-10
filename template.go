@@ -22,7 +22,7 @@ func render(tplName string, w http.ResponseWriter, data any, files ...string) er
 	funcs := template.FuncMap{
 		"add":      func(a, b int) int { return a + b },
 		"subtract": func(a, b int) int { return a - b },
-		"version":  func() string { return versioninfo.Short() },
+		"version":  func() string { return versioninfo.Revision },
 		"hasEasterEgg": func(easterEggs, name string) bool {
 			if easterEggs == "" {
 				return false
