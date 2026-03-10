@@ -244,6 +244,13 @@ TABLES Optimized for compact display with proper spacing hierarchy.
   padding-right: var(--spacing-sm);
 }
 
+.table .h2h-col {
+  width: 1px;
+  padding: 0 4px;
+  text-align: center;
+  white-space: nowrap;
+}
+
 /* Add padding to table links for proper hover box sizing */
 .table td a {
   padding: 2px var(--spacing-xs);
@@ -843,4 +850,47 @@ ANIMATIONS & EASTER EGGS
 
 body.page-roll {
   animation: pageRoll 2s ease-in-out;
+}
+
+/*
+H2H PICK BUTTON (leaderboard hover-to-compare)
+*/
+.h2h-pick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  vertical-align: middle;
+}
+
+/* Row hover (no selection active) */
+.table tr:hover .h2h-pick {
+  opacity: 0.4;
+}
+
+/* When picking mode active: show all sword buttons at low opacity */
+.table.h2h-picking .h2h-pick {
+  opacity: 0.4;
+}
+
+/* Hovering the icon itself while picking: full opacity */
+.table.h2h-picking tr:not(.h2h-selected) .h2h-pick:hover {
+  opacity: 1;
+}
+
+/* Selected row */
+.table tr.h2h-selected {
+  background: #f0f0f0;
+}
+
+.table tr.h2h-selected .h2h-pick {
+  opacity: 1;
 }

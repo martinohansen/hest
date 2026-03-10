@@ -109,6 +109,41 @@
           });
       });
 
+      // H2H quick-pick: click ⚔ on a leaderboard row to select player 1,
+      // then click ⚔ on another row to navigate to /h2h?player1=X&player2=Y.
+      (function () {
+        let selectedId = null;
+        let selectedRow = null;
+
+        document.addEventListener("click", function (e) {
+          const btn = e.target.closest(".h2h-pick");
+          if (!btn) return;
+          e.preventDefault();
+
+          const id = btn.dataset.playerId;
+          const row = btn.closest("tr");
+          const table = btn.closest("table");
+
+          if (!selectedId) {
+            selectedId = id;
+            selectedRow = row;
+            row.classList.add("h2h-selected");
+            if (table) table.classList.add("h2h-picking");
+          } else if (id === selectedId) {
+            selectedRow.classList.remove("h2h-selected");
+            if (table) table.classList.remove("h2h-picking");
+            selectedId = null;
+            selectedRow = null;
+          } else {
+            const params = new URLSearchParams(window.location.search);
+            const season = params.get("season");
+            let url = "/h2h?player1=" + selectedId + "&player2=" + id;
+            if (season) url += "&season=" + encodeURIComponent(season);
+            window.location.href = url;
+          }
+        });
+      })();
+
       const seasonSelect = document.getElementById("season-filter");
       if (seasonSelect) {
         seasonSelect.addEventListener("change", function () {
