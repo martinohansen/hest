@@ -110,15 +110,15 @@
   ];
 
   // Aggregate items into at most maxPoints buckets by averaging the numeric field.
-  // Returns the original array if it's already small enough.
+  // Returns the original array unchanged if already small enough.
   function aggregate(items, valueKey, maxPoints) {
     if (items.length <= maxPoints) return { items, bucketSize: 1 };
     const bucketSize = Math.ceil(items.length / maxPoints);
     const result = [];
     for (let i = 0; i < items.length; i += bucketSize) {
       const bucket = items.slice(i, i + bucketSize);
-      const avg = bucket.reduce((s, d) => s + d[valueKey], 0) / bucket.length;
-      result.push({ ...bucket[bucket.length - 1], [valueKey]: avg });
+      const avg = bucket.reduce((s, d) => s + parseFloat(d[valueKey]), 0) / bucket.length;
+      result.push({ ...bucket[bucket.length - 1], [valueKey]: avg, bucketLen: bucket.length });
     }
     return { items: result, bucketSize };
   }
@@ -156,7 +156,8 @@
           callbacks: {
             label: function(context) {
               const val = context.parsed.y.toFixed(2);
-              return ppgBucket > 1 ? `PPK (snit ${ppgBucket} kampe): ${val}` : `PPK: ${val}`;
+              const n = aggPPG[context.dataIndex]?.bucketLen;
+              return n > 1 ? `${val} (snit over ${n} kampe)` : val;
             }
           }
         }
@@ -172,10 +173,8 @@
     }
   });
 
-  // Rank chart
-  const { items: aggRank, bucketSize: rankBucket } = aggregate(rankHistory, 'rank', MAX_POINTS);
-  const rankLabels = aggRank.map(r => r.date);
-  const rankData = aggRank.map(r => r.rank);
+  const rankLabels = rankHistory.map(r => r.date);
+  const rankData = rankHistory.map(r => r.rank);
 
   new Chart(document.getElementById('rank-chart'), {
     type: 'line',
@@ -185,10 +184,10 @@
         label: 'Placering',
         data: rankData,
         borderColor: '#464646',
-        tension: 0.1,
+        tension: 0,
+        stepped: 'before',
         fill: false,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: 0,
       }]
     },
     options: {
@@ -202,11 +201,15 @@
         tooltip: {
           callbacks: {
             label: function(context) {
-              const val = Math.round(context.parsed.y);
-              return rankBucket > 1 ? `Plads ${val} (snit ${rankBucket} kampe)` : `Plads ${val}`;
+              return String(context.parsed.y);
             }
           }
         }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false,
       },
       scales: {
         y: {
