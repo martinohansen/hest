@@ -1,5 +1,32 @@
 {{define "content"}}
-<h1>{{.Player.Emoji}} {{.Player.Name}}</h1>
+<div class="game-header">
+  <h1>{{.Player.Emoji}} {{.Player.Name}}</h1>
+  <div class="badge-group">
+    <div class="badge badge-nav">
+      {{if .PrevPlayerID}}
+      <a
+        href="/player?id={{.PrevPlayerID}}{{if .SeasonExplicit}}&season={{.SeasonID}}{{end}}"
+        class="game-nav-arrow"
+        aria-label="Forrige spiller"
+        >‹</a
+      >
+      {{else}}
+      <span class="game-nav-arrow game-nav-disabled">‹</span>
+      {{end}}
+      <span class="game-id-display">#{{.Rank}}</span>
+      {{if .NextPlayerID}}
+      <a
+        href="/player?id={{.NextPlayerID}}{{if .SeasonExplicit}}&season={{.SeasonID}}{{end}}"
+        class="game-nav-arrow"
+        aria-label="Næste spiller"
+        >›</a
+      >
+      {{else}}
+      <span class="game-nav-arrow game-nav-disabled">›</span>
+      {{end}}
+    </div>
+  </div>
+</div>
 
 <div class="player-stats">
   <div class="stat">

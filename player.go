@@ -20,6 +20,8 @@ type playerDetailView struct {
 	TotalPlayers int
 	TotalGames   int
 	Rank         int
+	PrevPlayerID int
+	NextPlayerID int
 	seasonContext
 }
 
@@ -88,10 +90,17 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 	// Find player and its rank
 	var player Player
 	var rank int
+	var prevPlayerID, nextPlayerID int
 	for i, p := range players {
 		if p.ID == playerID {
 			player = p
 			rank = i + 1
+			if i > 0 {
+				prevPlayerID = players[i-1].ID
+			}
+			if i < len(players)-1 {
+				nextPlayerID = players[i+1].ID
+			}
 			break
 		}
 	}
@@ -147,6 +156,8 @@ func (a *App) handlePlayerDetail(w http.ResponseWriter, r *http.Request) {
 		withRankHistory(rankHistory).
 		withGames(games).
 		withTotalPlayers(len(players))
+	view.PrevPlayerID = prevPlayerID
+	view.NextPlayerID = nextPlayerID
 	view.seasonContext = ctx
 
 	renderTemplate(w, "layout", view, "templates/layout.html", "templates/player.html")

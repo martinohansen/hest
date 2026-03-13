@@ -2,6 +2,9 @@
 <div class="game-header">
   <h1>{{.Game.PlayedAt.Format "2006-01-02"}}</h1>
   <div class="badge-group">
+    {{if .Game.Weather}}
+    <span class="badge hide-small">{{.Game.Weather}}</span>
+    {{end}}
     <div class="badge badge-nav">
       {{if gt .Game.ID 1}}
       <a
@@ -25,9 +28,6 @@
       <span class="game-nav-arrow game-nav-disabled">›</span>
       {{end}}
     </div>
-    {{if .Game.Weather}}
-    <span class="badge hide-small">{{.Game.Weather}}</span>
-    {{end}}
   </div>
 </div>
 
