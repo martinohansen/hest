@@ -126,7 +126,6 @@
     </div>
 
     <h2 class="stat-label">Point</h2>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <canvas id="h2h-chart"></canvas>
     <script>
       const p1ID = {{.Stats.Player1.ID}};
@@ -268,15 +267,23 @@
       <tbody>
         {{range $index, $game := .Stats.SharedGamesList}}
         <tr>
-          <td class="rank hide-small" style="text-align: center">{{subtract $.Stats.SharedGames $index}}</td>
-          <td><a href="/game?id={{$game.ID}}">{{$game.PlayedAt.Format "2006-01-02"}}</a></td>
+          <td class="rank hide-small" style="text-align: center">
+            {{subtract $.Stats.SharedGames $index}}
+          </td>
+          <td>
+            <a href="/game?id={{$game.ID}}"
+              >{{$game.PlayedAt.Format "2006-01-02"}}</a
+            >
+          </td>
           <td class="nowrap">
-            <a href="/player?id={{$game.Winner.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
+            <a
+              href="/player?id={{$game.Winner.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
               >{{$game.Winner.Emoji}} {{$game.Winner.Name}}</a
             >
           </td>
           <td class="nowrap">
-            <a href="/player?id={{$game.Second.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
+            <a
+              href="/player?id={{$game.Second.ID}}{{if $.SeasonExplicit}}&season={{$.SeasonID}}{{end}}"
               >{{$game.Second.Emoji}} {{$game.Second.Name}}</a
             >
           </td>
