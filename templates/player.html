@@ -118,6 +118,21 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+  // Aggregate items into at most maxPoints buckets by averaging the numeric field.
+  // Returns the original array unchanged if already small enough.
+  function aggregate(items, valueKey, maxPoints) {
+    if (items.length <= maxPoints) return { items, bucketSize: 1 };
+    const bucketSize = Math.ceil(items.length / maxPoints);
+    const result = [];
+    for (let i = 0; i < items.length; i += bucketSize) {
+      const bucket = items.slice(i, i + bucketSize);
+      const avg = bucket.reduce((s, d) => s + parseFloat(d[valueKey]), 0) / bucket.length;
+      result.push({ ...bucket[bucket.length - 1], [valueKey]: avg, bucketLen: bucket.length });
+    }
+    return { items: result, bucketSize };
+  }
+</script>
+<script>
   const gameHistory = [
     {{range .GameHistory}}
     {
@@ -135,20 +150,6 @@
     },
     {{end}}
   ];
-
-  // Aggregate items into at most maxPoints buckets by averaging the numeric field.
-  // Returns the original array unchanged if already small enough.
-  function aggregate(items, valueKey, maxPoints) {
-    if (items.length <= maxPoints) return { items, bucketSize: 1 };
-    const bucketSize = Math.ceil(items.length / maxPoints);
-    const result = [];
-    for (let i = 0; i < items.length; i += bucketSize) {
-      const bucket = items.slice(i, i + bucketSize);
-      const avg = bucket.reduce((s, d) => s + parseFloat(d[valueKey]), 0) / bucket.length;
-      result.push({ ...bucket[bucket.length - 1], [valueKey]: avg, bucketLen: bucket.length });
-    }
-    return { items: result, bucketSize };
-  }
 
   const MAX_POINTS = 25;
 

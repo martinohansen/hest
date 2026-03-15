@@ -1,5 +1,5 @@
 {{define "content"}}
-<div id="h2h-container" class="stack">
+<div id="h2h-container">
   {{if not .ShowResults}}
   <form
     hx-get="/h2h"
@@ -38,7 +38,7 @@
     <button type="submit">Sammenlign</button>
   </form>
   {{end}} {{if .ShowResults}}
-  <div class="stack">
+  <div>
     {{if eq .Stats.SharedGames 0}}
     <p><em>Ingen head-to-head kampe endnu.</em></p>
     {{else}}
@@ -124,6 +124,136 @@
         </div>
       </div>
     </div>
+
+    <h2 class="stat-label">Point</h2>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <canvas id="h2h-chart"></canvas>
+    <script>
+      const p1ID = {{.Stats.Player1.ID}};
+      const p2ID = {{.Stats.Player2.ID}};
+      const p1Name = "{{.Stats.Player1.Emoji}} {{.Stats.Player1.Name}}";
+      const p2Name = "{{.Stats.Player2.Emoji}} {{.Stats.Player2.Name}}";
+      const p1Emoji = "{{.Stats.Player1.Emoji}}";
+      const p2Emoji = "{{.Stats.Player2.Emoji}}";
+
+      // Draw emoji directly on the chart canvas so the browser renders them at
+      // full resolution — no pre-rendering to an offscreen canvas needed.
+      const emojiOverlay = {
+        id: 'emojiOverlay',
+        afterDatasetsDraw(chart) {
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.font = '12px serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          chart.data.datasets.forEach((dataset, i) => {
+            const emoji = i === 0 ? p1Emoji : p2Emoji;
+            const meta = chart.getDatasetMeta(i);
+            if (!meta.hidden) {
+              meta.data.forEach(point => ctx.fillText(emoji, point.x, point.y));
+            }
+          });
+          ctx.restore();
+        }
+      };
+      const h2hGames = [
+        {{range .Stats.SharedGamesList}}
+        { date: "{{.PlayedAt.Format "01/02"}}", winnerID: {{.Winner.ID}}, secondID: {{.Second.ID}} },
+        {{end}}
+      ];
+
+      // Games are newest-first; reverse to chronological
+      const h2hOrdered = [...h2hGames].reverse();
+
+      // Build raw cumulative point totals for both players
+      let p1Total = 0, p2Total = 0;
+      const h2hRaw = [];
+      for (const g of h2hOrdered) {
+        p1Total += g.winnerID === p1ID ? 3 : (g.secondID === p1ID ? 1 : 0);
+        p2Total += g.winnerID === p2ID ? 3 : (g.secondID === p2ID ? 1 : 0);
+        h2hRaw.push({ date: g.date, p1: p1Total, p2: p2Total });
+      }
+
+      // Aggregate both series together so they share the same bucket boundaries.
+      // For cumulative data the last value of each bucket is the correct summary.
+      const MAX_POINTS = 25;
+      let h2hAgg;
+      if (h2hRaw.length <= MAX_POINTS) {
+        h2hAgg = h2hRaw.map(d => ({ ...d, bucketLen: 1 }));
+      } else {
+        const bucketSize = Math.ceil(h2hRaw.length / MAX_POINTS);
+        h2hAgg = [];
+        for (let i = 0; i < h2hRaw.length; i += bucketSize) {
+          const bucket = h2hRaw.slice(i, i + bucketSize);
+          const last = bucket[bucket.length - 1];
+          h2hAgg.push({ ...last, bucketLen: bucket.length });
+        }
+      }
+
+      const h2hLabels = h2hAgg.map(d => d.date);
+      const p1Data = h2hAgg.map(d => d.p1);
+      const p2Data = h2hAgg.map(d => d.p2);
+
+      new Chart(document.getElementById('h2h-chart'), {
+        plugins: [emojiOverlay],
+        type: 'line',
+        data: {
+          labels: h2hLabels,
+          datasets: [
+            {
+              label: p1Name,
+              data: p1Data,
+              borderColor: '#464646',
+              backgroundColor: 'rgba(70, 70, 70, 0.1)',
+              tension: 0.1,
+              fill: true,
+              pointRadius: 0,
+            },
+            {
+              label: p2Name,
+              data: p2Data,
+              borderColor: '#a05020',
+              backgroundColor: 'rgba(160, 80, 32, 0.1)',
+              tension: 0.1,
+              fill: true,
+              pointRadius: 0,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const n = h2hAgg[context.dataIndex]?.bucketLen;
+                  const suffix = n > 1 ? ` (over ${n} kampe)` : '';
+                  return context.dataset.label + ': ' + context.parsed.y + suffix;
+                }
+              }
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false,
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+    </script>
 
     <table class="table">
       <thead>
