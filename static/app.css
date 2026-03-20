@@ -823,6 +823,16 @@ RESPONSIVE / MEDIA QUERIES
   .season-row {
     grid-template-columns: 1fr;
   }
+
+  .table th:first-child,
+  .table td:first-child {
+    padding-left: 10px;
+  }
+
+  .table th:last-child,
+  .table td:last-child {
+    padding-right: 10px;
+  }
 }
 
 /*
