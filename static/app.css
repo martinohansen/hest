@@ -354,6 +354,10 @@ button.ghost {
   color: var(--accent);
 }
 
+button.danger {
+  background: var(--error);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

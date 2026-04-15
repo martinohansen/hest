@@ -5,7 +5,7 @@
   <p class="error">{{.Error}}</p>
   {{end}}
 
-  <form action="/game/update" method="post" class="stack">
+  <form id="game-edit-form" action="/game/update" method="post" class="stack">
     <input type="hidden" name="game_id" value="{{.GameID}}" />
     {{if .SeasonExplicit}}
     <input type="hidden" name="season" value="{{.SeasonID}}" />
@@ -31,11 +31,24 @@
       <input type="hidden" name="winner_id" id="input-winner-id" value="{{if .WinnerID}}{{.WinnerID}}{{end}}" />
       <input type="hidden" name="second_id" id="input-second-id" value="{{if .SecondID}}{{.SecondID}}{{end}}" />
     </div>
-
-    <div class="actions">
-      <button type="submit">Gem ændringer</button>
-    </div>
   </form>
+
+  <form
+    id="game-delete-form"
+    action="/game/delete"
+    method="post"
+    onsubmit="return confirm('Slet kamp #{{.GameID}}?');"
+  >
+    <input type="hidden" name="game_id" value="{{.GameID}}" />
+    {{if .SeasonExplicit}}
+    <input type="hidden" name="season" value="{{.SeasonID}}" />
+    {{end}}
+  </form>
+
+  <div class="actions">
+    <button type="submit" form="game-delete-form" class="danger">Slet kamp</button>
+    <button type="submit" form="game-edit-form">Gem ændringer</button>
+  </div>
 </div>
 <script>
 (function () {

@@ -823,6 +823,24 @@ func (s *Store) UpdateGame(gameID int, playedAt time.Time, participantIDs []int,
 	return err
 }
 
+// DeleteGame removes a game and its participants via cascading deletes.
+func (s *Store) DeleteGame(gameID int) error {
+	res, err := s.db.Exec(`DELETE FROM games WHERE id = ?`, gameID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
 // GamesWithoutWeather returns all games that have no weather data.
 func (s *Store) GamesWithoutWeather() ([]Game, error) {
 	rows, err := s.db.Query(`

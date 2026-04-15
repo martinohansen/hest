@@ -33,6 +33,7 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("/game", a.handleGameDetail)
 	mux.HandleFunc("/game/edit", a.handleGameEdit)
 	mux.HandleFunc("/game/update", a.handleUpdateGame)
+	mux.HandleFunc("/game/delete", a.handleDeleteGame)
 	mux.HandleFunc("/games/save", a.handleSaveGame)
 	mux.HandleFunc("/games/save-and-new", a.handleSaveAndNewGame)
 	mux.HandleFunc("/seasons", a.handleSeasons)

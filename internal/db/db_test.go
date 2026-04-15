@@ -299,3 +299,41 @@ func TestUpdateGamePreservesWeatherAndUpdatesPlacements(t *testing.T) {
 		t.Errorf("expected weather %q to be preserved, got %q", weather, game.Weather)
 	}
 }
+
+func TestDeleteGameRemovesGameAndParticipants(t *testing.T) {
+	store, err := Open(":memory:")
+	if err != nil {
+		t.Fatalf("opening db: %v", err)
+	}
+	defer store.Close()
+
+	if err := store.AddPlayer("Alice"); err != nil {
+		t.Fatalf("adding player: %v", err)
+	}
+	if err := store.AddPlayer("Bob"); err != nil {
+		t.Fatalf("adding player: %v", err)
+	}
+
+	playedAt := time.Date(2025, 6, 15, 0, 0, 0, 0, time.UTC)
+	if _, err := store.AddGame(playedAt, []int{1, 2}, 1, 2, "test", "☀️ 22°"); err != nil {
+		t.Fatalf("adding game: %v", err)
+	}
+
+	if err := store.DeleteGame(1); err != nil {
+		t.Fatalf("deleting game: %v", err)
+	}
+
+	if _, ok, err := store.GetGameByID(1); err != nil {
+		t.Fatalf("getting deleted game: %v", err)
+	} else if ok {
+		t.Fatal("expected deleted game to be missing")
+	}
+
+	var participants int
+	if err := store.db.QueryRow(`SELECT COUNT(*) FROM game_players WHERE game_id = ?`, 1).Scan(&participants); err != nil {
+		t.Fatalf("counting game participants: %v", err)
+	}
+	if participants != 0 {
+		t.Fatalf("expected cascading delete of participants, got %d rows", participants)
+	}
+}

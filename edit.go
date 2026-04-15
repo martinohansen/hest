@@ -252,3 +252,43 @@ func (a *App) handleUpdateGame(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, redirectPath, http.StatusSeeOther)
 }
+
+func (a *App) handleDeleteGame(w http.ResponseWriter, r *http.Request) {
+	_, ok := ensureAuthAndForm(w, r)
+	if !ok {
+		return
+	}
+
+	gameID, err := parseGameID(r.FormValue("game_id"))
+	if err != nil {
+		http.Error(w, "invalid game id", http.StatusBadRequest)
+		return
+	}
+
+	_, found, err := a.store.GetGameByID(gameID)
+	if err != nil {
+		http.Error(w, "failed to load game", http.StatusInternalServerError)
+		return
+	}
+	if !found {
+		http.Error(w, "game not found", http.StatusNotFound)
+		return
+	}
+
+	if err := a.store.DeleteGame(gameID); err != nil {
+		http.Error(w, "db error", http.StatusInternalServerError)
+		return
+	}
+
+	redirectPath := "/games"
+	if season, explicit := seasonParamFromRequest(r); explicit {
+		redirectPath += "?season=" + url.QueryEscape(season)
+	}
+
+	if r.Header.Get("HX-Request") != "" {
+		w.Header().Set("HX-Redirect", redirectPath)
+		return
+	}
+
+	http.Redirect(w, r, redirectPath, http.StatusSeeOther)
+}
