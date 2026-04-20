@@ -6,9 +6,9 @@
     <span class="badge hide-small">{{.Game.Weather}}</span>
     {{end}}
     <div class="badge badge-nav">
-      {{if gt .Game.ID 1}}
+      {{if .PrevGameID}}
       <a
-        href="/game?id={{subtract .Game.ID 1}}"
+        href="/game?id={{.PrevGameID}}"
         class="game-nav-arrow"
         aria-label="Previous game"
         >‹</a
@@ -17,9 +17,9 @@
       <span class="game-nav-arrow game-nav-disabled">‹</span>
       {{end}}
       <span class="game-id-display">#{{.Game.ID}}</span>
-      {{if lt .Game.ID .MaxGameID}}
+      {{if .NextGameID}}
       <a
-        href="/game?id={{add .Game.ID 1}}"
+        href="/game?id={{.NextGameID}}"
         class="game-nav-arrow"
         aria-label="Next game"
         >›</a

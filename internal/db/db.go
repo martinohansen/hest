@@ -893,11 +893,15 @@ func (s *Store) UpdateGameWeather(gameID int, weather string) error {
 	return err
 }
 
-// GetMaxGameID returns the maximum game ID in the database.
-func (s *Store) GetMaxGameID() (int, error) {
-	var maxID int
-	err := s.db.QueryRow(`SELECT COALESCE(MAX(id), 0) FROM games`).Scan(&maxID)
-	return maxID, err
+// GetAdjacentGameIDs returns the previous and next game IDs relative to the given ID.
+// Returns 0 if there is no previous or next game.
+func (s *Store) GetAdjacentGameIDs(gameID int) (prev, next int, err error) {
+	err = s.db.QueryRow(`SELECT COALESCE((SELECT MAX(id) FROM games WHERE id < ?), 0)`, gameID).Scan(&prev)
+	if err != nil {
+		return 0, 0, err
+	}
+	err = s.db.QueryRow(`SELECT COALESCE((SELECT MIN(id) FROM games WHERE id > ?), 0)`, gameID).Scan(&next)
+	return prev, next, err
 }
 
 // GetGameByID returns a single game by its ID, including participants.

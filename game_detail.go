@@ -5,10 +5,11 @@ import (
 )
 
 type gameDetailView struct {
-	Path      string
-	Title     string
-	Game      Game
-	MaxGameID int
+	Path       string
+	Title      string
+	Game       Game
+	PrevGameID int
+	NextGameID int
 	seasonContext
 }
 
@@ -46,17 +47,18 @@ func (a *App) handleGameDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	maxGameID, err := a.store.GetMaxGameID()
+	prevGameID, nextGameID, err := a.store.GetAdjacentGameIDs(gameID)
 	if err != nil {
-		http.Error(w, "failed to load max game ID", http.StatusInternalServerError)
+		http.Error(w, "failed to load adjacent games", http.StatusInternalServerError)
 		return
 	}
 
 	view := gameDetailView{
-		Path:      "/game",
-		Title:     "Kamp #" + gameIDStr,
-		Game:      Game(gameDB),
-		MaxGameID: maxGameID,
+		Path:       "/game",
+		Title:      "Kamp #" + gameIDStr,
+		Game:       Game(gameDB),
+		PrevGameID: prevGameID,
+		NextGameID: nextGameID,
 	}
 	view.seasonContext = ctx
 
