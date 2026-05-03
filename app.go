@@ -46,7 +46,13 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("/h2h", a.handleH2H)
 	mux.HandleFunc("/rules", a.handleRules)
 	mux.HandleFunc("/shortcuts", a.handleShortcuts)
+	mux.HandleFunc("/robots.txt", handleRobots)
 	return mux
+}
+
+func handleRobots(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write([]byte("User-agent: *\nDisallow: /stats\n"))
 }
 
 func (a *App) Leaderboard(filter *db.DateRange) ([]Player, error) {
