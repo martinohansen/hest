@@ -6,9 +6,10 @@ import (
 	"github.com/martinohansen/hest/internal/db"
 )
 
-// calculateRankChanges compares current leaderboard with leaderboard from 2
-// games ago and returns a map of player ID to rank change (positive = moved up,
-// negative = moved down)
+// calculateRankChanges compares current leaderboard with leaderboard from before
+// the last day games were played and returns a map of player ID to rank change
+// (positive = moved up, negative = moved down). All games from the last day
+// are excluded when computing the old leaderboard.
 func (a *App) calculateRankChanges(filter *db.DateRange) (map[int]int, error) {
 	// Get all games in the date range
 	games, err := a.store.ListGames(filter)
@@ -16,31 +17,31 @@ func (a *App) calculateRankChanges(filter *db.DateRange) (map[int]int, error) {
 		return nil, err
 	}
 
-	// If we have less than 2 games, no changes to show
-	if len(games) < 2 {
+	// If no games, no changes to show
+	if len(games) == 0 {
 		return make(map[int]int), nil
 	}
 
-	// Get the played_at time of the 2nd most recent game
-	// games are ordered DESC, so games[1] is the 2nd most recent
-	cutoffTime := games[1].PlayedAt
+	// Find the date of the most recent game
+	lastDate := games[0].PlayedAt.Truncate(24 * time.Hour)
+	cutoffTime := lastDate.Add(-1 * time.Second)
 
-	// Create a filter that excludes the last 2 games
+	// Create a filter that excludes all games from the last day
 	var oldFilter *db.DateRange
 	if filter != nil && filter.Valid() {
 		oldFilter = &db.DateRange{
 			StartDate: filter.StartDate,
-			EndDate:   cutoffTime.Add(-1 * time.Second).Format(dateLayout),
+			EndDate:   cutoffTime.Format(dateLayout),
 		}
 	} else {
 		// No filter, so get everything before the cutoff
 		oldFilter = &db.DateRange{
 			StartDate: "1970-01-01",
-			EndDate:   cutoffTime.Add(-1 * time.Second).Format(dateLayout),
+			EndDate:   cutoffTime.Format(dateLayout),
 		}
 	}
 
-	// Get old leaderboard (before last 2 games)
+	// Get old leaderboard (before the last day with games)
 	oldLeaderboard, err := a.store.ListPlayersByPoints(oldFilter)
 	if err != nil {
 		return nil, err
