@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/carlmjohnson/versioninfo"
 	"github.com/martinohansen/hest/internal/db"
@@ -21,18 +23,27 @@ func main() {
 	backfillWeather(store)
 
 	app := newApp(store)
+	address := listenAddress()
 
+	slog.Info("listening",
+		"address", address,
+		"version", versioninfo.Revision[:7],
+	)
+	if err := http.ListenAndServe(address, app.routes()); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func listenAddress() string {
 	port := "8080"
 	if portEnv := os.Getenv("HEST_PORT"); portEnv != "" {
 		port = portEnv
 	}
-
-	slog.Info("listening on http://localhost:"+port,
-		"version", versioninfo.Revision[:7],
-	)
-	if err := http.ListenAndServe(":"+port, app.routes()); err != nil {
-		log.Fatal(err)
+	host := strings.TrimSpace(os.Getenv("HEST_HOST"))
+	if host == "" {
+		host = "localhost"
 	}
+	return net.JoinHostPort(host, port)
 }
 
 // backfillWeather fetches and stores weather data for all games that don't

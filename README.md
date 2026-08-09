@@ -19,6 +19,18 @@ Just run it, it will create a [SQLite](https://www.sqlite.org/) database in the 
 HEST_PASSWORD=<password> hest
 ```
 
+## Configuration
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `HEST_HOST` | `localhost` | HTTP bind host. Use a hostname or an unbracketed IP address. |
+| `HEST_PORT` | `8080` | HTTP listen port. |
+| `HEST_PASSWORD` | `hest` | Basic authentication password for write operations. |
+| `HEST_LATITUDE` | `55.6761` | Latitude used for weather lookups. |
+| `HEST_LONGITUDE` | `12.5683` | Longitude used for weather lookups. |
+
+Hest trusts the first `X-Forwarded-For` address. Sanitize it at the proxy.
+
 ## Screenshots
 
 This is how it looks in action:

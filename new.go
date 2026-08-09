@@ -60,7 +60,7 @@ func (f gameForm) withDate(playedAt string) gameForm {
 }
 
 func (a *App) handleAddPlayer(w http.ResponseWriter, r *http.Request) {
-	_, ok := ensureAuthAndForm(w, r)
+	_, ok := a.ensureAuthAndForm(w, r)
 	if !ok {
 		return
 	}
@@ -187,7 +187,7 @@ func (a *App) handleSaveAndNewGame(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) saveGameCommon(w http.ResponseWriter, r *http.Request) ([]Player, time.Time, bool) {
-	username, ok := ensureAuthAndForm(w, r)
+	username, ok := a.ensureAuthAndForm(w, r)
 	if !ok {
 		return nil, time.Time{}, false
 	}

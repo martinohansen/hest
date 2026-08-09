@@ -12,7 +12,8 @@ import (
 const dateLayout = "2006-01-02"
 
 type App struct {
-	store *db.Store
+	store       *db.Store
+	authLimiter *authLimiter
 }
 
 type (
@@ -21,7 +22,10 @@ type (
 )
 
 func newApp(store *db.Store) *App {
-	return &App{store: store}
+	return &App{
+		store:       store,
+		authLimiter: newAuthLimiter(time.Now),
+	}
 }
 
 func (a *App) routes() http.Handler {

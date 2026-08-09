@@ -108,7 +108,7 @@ func (a *App) handleGameEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleUpdateGame(w http.ResponseWriter, r *http.Request) {
-	_, ok := ensureAuthAndForm(w, r)
+	_, ok := a.ensureAuthAndForm(w, r)
 	if !ok {
 		return
 	}
@@ -254,7 +254,7 @@ func (a *App) handleUpdateGame(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleDeleteGame(w http.ResponseWriter, r *http.Request) {
-	_, ok := ensureAuthAndForm(w, r)
+	_, ok := a.ensureAuthAndForm(w, r)
 	if !ok {
 		return
 	}

@@ -43,7 +43,7 @@ func (a *App) handleSeasons(w http.ResponseWriter, r *http.Request) {
 		renderTemplate(w, "layout", view, "templates/layout.html", "templates/seasons.html")
 		return
 	case http.MethodPost:
-		_, ok := ensureAuthAndForm(w, r)
+		_, ok := a.ensureAuthAndForm(w, r)
 		if !ok {
 			return
 		}

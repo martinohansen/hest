@@ -6,22 +6,11 @@ repository.
 ## Commands
 
 ```sh
-go run .          # Run the server (listens on :8080 by default)
+go run .          # Run the server (listens on localhost:8080 by default)
 go build ./...    # Build
 go test ./...     # Run all tests
 go test ./internal/db/...  # Run DB tests only
 ```
-
-## Environment Variables
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `HEST_PORT` | `8080` | HTTP listen port |
-| `HEST_PASSWORD` | `hest` | Basic auth password |
-| `HEST_LATITUDE` | `55.6761` (Copenhagen) | Weather location |
-| `HEST_LONGITUDE` | `12.5683` (Copenhagen) | Weather location |
-
-The app creates `hest.db` (SQLite) in the working directory on first run.
 
 ## Architecture
 

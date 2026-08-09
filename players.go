@@ -47,7 +47,7 @@ func (a *App) handlePlayers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleUpdatePlayer(w http.ResponseWriter, r *http.Request) {
-	_, ok := ensureAuthAndForm(w, r)
+	_, ok := a.ensureAuthAndForm(w, r)
 	if !ok {
 		return
 	}
