@@ -51,7 +51,7 @@ func (a *App) routes() http.Handler {
 	mux.HandleFunc("/rules", a.handleRules)
 	mux.HandleFunc("/shortcuts", a.handleShortcuts)
 	mux.HandleFunc("/robots.txt", handleRobots)
-	return mux
+	return http.NewCrossOriginProtection().Handler(mux)
 }
 
 func handleRobots(w http.ResponseWriter, r *http.Request) {

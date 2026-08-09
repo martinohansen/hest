@@ -310,6 +310,85 @@ func TestScoreRouteDoesNotContributeToLimit(t *testing.T) {
 	}
 }
 
+func TestCrossOriginProtection(t *testing.T) {
+	t.Setenv("HEST_PASSWORD", "correct-password")
+
+	tests := []struct {
+		name         string
+		method       string
+		path         string
+		secFetchSite string
+		origin       string
+		wantStatus   int
+	}{
+		{
+			name:         "cross-site write",
+			method:       http.MethodPost,
+			path:         "/players/add",
+			secFetchSite: "cross-site",
+			wantStatus:   http.StatusForbidden,
+		},
+		{
+			name:         "same-site write",
+			method:       http.MethodPost,
+			path:         "/players/add",
+			secFetchSite: "same-site",
+			wantStatus:   http.StatusForbidden,
+		},
+		{
+			name:         "same-origin write reaches authentication",
+			method:       http.MethodPost,
+			path:         "/players/add",
+			secFetchSite: "same-origin",
+			wantStatus:   http.StatusUnauthorized,
+		},
+		{
+			name:         "cross-site safe method reaches authentication",
+			method:       http.MethodGet,
+			path:         "/players",
+			secFetchSite: "cross-site",
+			wantStatus:   http.StatusUnauthorized,
+		},
+		{
+			name:       "mismatched origin fallback",
+			method:     http.MethodPost,
+			path:       "/players/add",
+			origin:     "https://attacker.example",
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name:       "matching origin fallback reaches authentication",
+			method:     http.MethodPost,
+			path:       "/players/add",
+			origin:     "https://example.com",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "headerless client reaches authentication",
+			method:     http.MethodPost,
+			path:       "/players/add",
+			wantStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := newApp(nil)
+			request := httptest.NewRequest(tt.method, "https://example.com"+tt.path, nil)
+			request.Header.Set("Sec-Fetch-Site", tt.secFetchSite)
+			request.Header.Set("Origin", tt.origin)
+			request.SetBasicAuth("player", "wrong-password")
+			response := httptest.NewRecorder()
+
+			app.routes().ServeHTTP(response, request)
+
+			if response.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", response.Code, tt.wantStatus)
+			}
+		})
+	}
+}
+
 func newFormRequest(route, forwardedFor string) *http.Request {
 	request := httptest.NewRequest(http.MethodPost, route,
 		strings.NewReader(url.Values{}.Encode()))
